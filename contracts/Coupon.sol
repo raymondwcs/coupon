@@ -16,9 +16,7 @@ contract Coupon is Ownable, ERC721 {
 
     constructor() public ERC721("Coupon", "CPN") {}
 
-    function awardCoupon(address customer, string memory tokenURI)
-        public onlyOwner
-        returns (uint256)
+    function awardCoupon(address customer, string memory tokenURI) public onlyOwner returns (uint256)
     {
         _tokenIds.increment();
 
@@ -31,10 +29,14 @@ contract Coupon is Ownable, ERC721 {
         return newCouponId;
     }
 
+    event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI);
+
     function redeemCoupon(uint256 tokenId) public { 
-        require(ownerOf(tokenId) == msg.sender, "Not owner");
-        require(redeemed[tokenId] == false, "Redeemed already");
+        require(ownerOf(tokenId) == msg.sender, "Not Owner");
+        require(redeemed[tokenId] == false, "Already Redeemed");
 
         redeemed[tokenId] = true;
+
+        emit redeemCouponEvent(msg.sender, tokenId, tokenURI(tokenId));
     }
 }
