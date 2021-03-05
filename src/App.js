@@ -20,7 +20,8 @@ class App extends React.Component {
     this.state = {
       storageValue: 0,
       web3: null,
-      eventHistory: []
+      eventHistory: [],
+      myCoupons: []
     }
   }
 
@@ -46,45 +47,31 @@ class App extends React.Component {
   }
 
 
-  instantiateContract() {
+  async instantiateContract() {
     const contract = require('@truffle/contract')
     const coupon = contract(CouponContract)
     coupon.setProvider(this.state.web3.currentProvider)
 
     // Declaring this for later so we can chain functions on coupon.
-    var couponInstance
+    // var couponInstance
     var myCoupons = []
     var myAccount = this.state.accounts[0]
     console.log(`myAccount: ${myAccount}`)
 
-    coupon.deployed().then(instance => {
-      couponInstance = instance
-      this.setState({ couponInstance: instance })
-      return couponInstance.totalSupply()
-    }).then(totalSupply => {
-      console.log(`get() returns: ${totalSupply.toNumber()}`)
-      this.setState({ storageValue: totalSupply.toNumber() })
-      return totalSupply.toNumber()
-      // this.updateEventHistory()
-    }).then(totalSupply => {
-      for (let i = 0; i < totalSupply; i++) {
-        couponInstance.tokenByIndex(i).then(c => {
-          couponInstance.ownerOf(c).then(owner => {
-            console.log(`owner: ${owner}`)
-            if (owner.toString() === myAccount.toString()) {
-              console.log(`Token ${c.toNumber()} is mine`)
-              myCoupons.push(c.toNumber())
-            }
-          })
-        })
+    var instance = await coupon.deployed()
+    this.setState({ couponInstance: instance })
+    var totalSupply = await instance.totalSupply()
+    console.log(`totalSupply(): ${totalSupply.toNumber()}`)
+    this.setState({ storageValue: totalSupply.toNumber() })
+    for (let i = 0; i < totalSupply.toNumber(); i++) {
+      let c = await instance.tokenByIndex(i)
+      let owner = await instance.ownerOf(c)
+      if (owner.toString() === myAccount.toString()) {
+        myCoupons.push(c.toString())
       }
-      return (myCoupons)
-    }).then(myCoupons => {
-      console.log(`myCoupons: ${myCoupons.length}`)
-      this.setState({ myCoupons: myCoupons })
-    }).catch(error => {
-      alert(error.message)
-    })
+    }
+    this.setState({ myCoupons: myCoupons })
+    console.log(`myCoupons: ${myCoupons}`)
   }
 
   // updateEventHistory = async () => {
@@ -143,7 +130,7 @@ class App extends React.Component {
         <div className="row">
           <div className="col-md-3"></div>
           <div className="col-md-6">
-            <CouponSelector coupons={this.state.couponInstance} />
+            <CouponSelector myCoupons={this.state.myCoupons} />
           </div>
           <div className="col-md-3"></div>
         </div>
@@ -211,18 +198,15 @@ class Provider extends React.Component {
 
 class CouponSelector extends React.Component {
   render() {
-
+    let listItems = this.props.myCoupons.map((e) =>
+      < option key={e}>{e}</option >
+    )
     return (
       <div className="d-flex justify-content-center">
         <Form inline>
-          <Form.Label htmlFor="inlineFormInputName2" srOnly>
-            Name
-          </Form.Label>
-          <Form.Control
-            className="mb-2 mr-sm-2"
-            id="inlineFormInputName2"
-            placeholder="Jane Doe"
-          />
+          <Form.Control as="select">
+            {listItems}
+          </Form.Control>
           <Button type="submit" className="mb-2">
             Redeem
           </Button>
