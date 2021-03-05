@@ -27,6 +27,9 @@ module.exports = async function main(callback) {
             console.log(`redeemed(${tokenId}) = ${await coupon.redeemed(tokenId)} `)
         }
 
+        // let myCoupons = await coupon.myCoupons()
+        // console.log(`myCoupons(): ${myCoupons.toString()}`)
+
         callback(0);
     } catch (error) {
         console.error(error);

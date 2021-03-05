@@ -39,4 +39,21 @@ contract Coupon is Ownable, ERC721 {
 
         emit redeemCouponEvent(msg.sender, tokenId, tokenURI(tokenId));
     }
+    /*
+    function myCoupons() public returns (uint256 [] memory) {
+        uint256 n = balanceOf(msg.sender);
+        uint256[] memory myCoupons = new uint256[](n);
+
+        uint j = 0;
+        for (uint i = 0; i < totalSupply(); i++) {
+            uint256 c = tokenByIndex(i);
+            if (msg.sender == ownerOf(c)) {
+                string memory x = c.toString();
+                myCoupons[j] = x.toNumber();
+                j = j + 1;
+            }
+        }
+        return myCoupons;
+    }
+    */
 }

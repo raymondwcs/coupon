@@ -3,8 +3,9 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.css';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+// import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
-// import Container from 'react-bootstrap/Container';
+// import InputGroup from 'react-bootstrap/InputGroup';
 
 // import logo from './logo.svg';
 // import './App.css';
@@ -47,20 +48,40 @@ class App extends React.Component {
 
   instantiateContract() {
     const contract = require('@truffle/contract')
-    const simpleStorage = contract(CouponContract)
-    simpleStorage.setProvider(this.state.web3.currentProvider)
+    const coupon = contract(CouponContract)
+    coupon.setProvider(this.state.web3.currentProvider)
 
-    // Declaring this for later so we can chain functions on SimpleStorage.
+    // Declaring this for later so we can chain functions on coupon.
     var couponInstance
+    var myCoupons = []
+    var myAccount = this.state.accounts[0]
+    console.log(`myAccount: ${myAccount}`)
 
-    simpleStorage.deployed().then(instance => {
+    coupon.deployed().then(instance => {
       couponInstance = instance
       this.setState({ couponInstance: instance })
-      return couponInstance.balanceOf(this.state.accounts[0])
-    }).then(results => {
-      console.log(`get() returns: ${results.toNumber()}`)
-      this.setState({ storageValue: results.toNumber() })
+      return couponInstance.totalSupply()
+    }).then(totalSupply => {
+      console.log(`get() returns: ${totalSupply.toNumber()}`)
+      this.setState({ storageValue: totalSupply.toNumber() })
+      return totalSupply.toNumber()
       // this.updateEventHistory()
+    }).then(totalSupply => {
+      for (let i = 0; i < totalSupply; i++) {
+        couponInstance.tokenByIndex(i).then(c => {
+          couponInstance.ownerOf(c).then(owner => {
+            console.log(`owner: ${owner}`)
+            if (owner.toString() === myAccount.toString()) {
+              console.log(`Token ${c.toNumber()} is mine`)
+              myCoupons.push(c.toNumber())
+            }
+          })
+        })
+      }
+      return (myCoupons)
+    }).then(myCoupons => {
+      console.log(`myCoupons: ${myCoupons.length}`)
+      this.setState({ myCoupons: myCoupons })
     }).catch(error => {
       alert(error.message)
     })
@@ -80,7 +101,7 @@ class App extends React.Component {
   //   })
   // }
 
-  addToSimpleStorage = (value) => {
+  addTocoupon = (value) => {
     if (this.state.couponInstance && this.state.accounts) {
       console.log(`value to be stored is = ${value}`);
       console.log(`account: ${this.state.accounts}`)
@@ -119,19 +140,12 @@ class App extends React.Component {
         <div className="d-flex justify-content-center">
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.storageValue}</span> coupon(s)</p>
         </div>
-        <div className="d-flex justify-content-center">
-          <Form inline>
-
-            <Form.Label className="my-1 mr-2" htmlFor="inlineFormCustomSelectPref">New stored Value</Form.Label>
-            {/* <Form.Control className="my-1 mr-sm-2" id="storageAmountInput" type="number" ref={c => { this.storageAmountInput = c }} /> */}
-            <Form.Control className="my-1 mr-sm-2" id="storageAmountInput" type="number"></Form.Control>
-            <Button variant="primary" onClick={(e) => {
-              e.preventDefault();
-              this.addToSimpleStorage(document.getElementById("storageAmountInput").value)
-            }}
-            >Change
-            </Button>
-          </Form>
+        <div className="row">
+          <div className="col-md-3"></div>
+          <div className="col-md-6">
+            <CouponSelector coupons={this.state.couponInstance} />
+          </div>
+          <div className="col-md-3"></div>
         </div>
         <br></br>
         <div className="row">
@@ -191,6 +205,29 @@ class Provider extends React.Component {
       <div className="d-flex justify-content-center">
         <h6>Connected to network: <code>{this.props.network.name}</code></h6>
       </div >
+    )
+  }
+}
+
+class CouponSelector extends React.Component {
+  render() {
+
+    return (
+      <div className="d-flex justify-content-center">
+        <Form inline>
+          <Form.Label htmlFor="inlineFormInputName2" srOnly>
+            Name
+          </Form.Label>
+          <Form.Control
+            className="mb-2 mr-sm-2"
+            id="inlineFormInputName2"
+            placeholder="Jane Doe"
+          />
+          <Button type="submit" className="mb-2">
+            Redeem
+          </Button>
+        </Form>
+      </div>
     )
   }
 }
