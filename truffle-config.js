@@ -1,3 +1,7 @@
+const path = require("path");
+require('dotenv').config()
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const { API_URL, MNEMONIC } = process.env;
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -25,6 +29,7 @@
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
+  contracts_build_directory: path.join(__dirname, "/src/build/contracts"),
   /**
    * Networks define how you connect to your ethereum client and let you set the
    * defaults web3 uses to send transactions. If you don't specify one truffle
