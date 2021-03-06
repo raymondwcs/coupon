@@ -2,9 +2,11 @@ import React from 'react';
 // import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.css';
 import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
+// import Form from 'react-bootstrap/Form';
 // import FormControl from 'react-bootstrap/FormControl';
-import Table from 'react-bootstrap/Table';
+// import Table from 'react-bootstrap/Table';
+import Card from 'react-bootstrap/Card';
+
 // import InputGroup from 'react-bootstrap/InputGroup';
 
 // import logo from './logo.svg';
@@ -18,7 +20,7 @@ class App extends React.Component {
     super(props)
 
     this.state = {
-      storageValue: 0,
+      nCoupons: 0,
       web3: null,
       eventHistory: [],
       myCoupons: []
@@ -62,12 +64,17 @@ class App extends React.Component {
     this.setState({ couponInstance: instance })
     var totalSupply = await instance.totalSupply()
     console.log(`totalSupply(): ${totalSupply.toNumber()}`)
-    this.setState({ storageValue: totalSupply.toNumber() })
+    this.setState({ nCoupons: totalSupply.toNumber() })
     for (let i = 0; i < totalSupply.toNumber(); i++) {
       let c = await instance.tokenByIndex(i)
       let owner = await instance.ownerOf(c)
       if (owner.toString() === myAccount.toString()) {
-        myCoupons.push(c.toString())
+        // myCoupons.push(c.toString())
+        let coupon = {}
+        coupon.id = c.toString()
+        coupon.value = "$50.00"
+        coupon.expiryDate = "2020-01-01"
+        myCoupons.push(coupon)
       }
     }
     this.setState({ myCoupons: myCoupons })
@@ -98,7 +105,7 @@ class App extends React.Component {
         }).then((results) => {
           this.setState(prevState => ({
             ...prevState,
-            storageValue: results.toNumber()
+            nCoupons: results.toNumber()
           }));
           // this.updateEventHistory()
         }).catch((err) => {
@@ -125,7 +132,7 @@ class App extends React.Component {
         <h1 className="d-flex justify-content-center">Coupons</h1>
         <Provider network={this.state.network} />
         <div className="d-flex justify-content-center">
-          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.storageValue}</span> coupon(s)</p>
+          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
         </div>
         <div className="row">
           <div className="col-md-3"></div>
@@ -135,56 +142,55 @@ class App extends React.Component {
           <div className="col-md-3"></div>
         </div>
         <br></br>
-        <div className="row">
+        {/* <div className="row">
           <div className="col-md-3"></div>
           <div className="col-md-6">
             <EventHistory events={this.state.eventHistory} />
           </div>
           <div className="col-md-3"></div>
-        </div>
+        </div> */}
       </div>
 
     );
   }
 }
 
-class EventHistory extends React.Component {
-
-  render() {
-    if (this.props.events.length === 0) {
-      return < div ></div >
-    }
-    // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
-    // return <ol>{listItems}</ol>
-    let listItems = this.props.events.map((e) =>
-      <tr key={e.transactionHash}>
-        {/* <td>{e.transactionHash}</td> */}
-        <td className="text-success">{e.newValue}</td>
-        <td>{e.oldValue}</td>
-      </tr>
-    )
-    return (
-      <div >
-        <div className="d-flex justify-content-center">Transaction History</div>
-        {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
-        <div className="d-flex justify-content-center">
-          <Table striped bordered hover size="sm">
-            <thead>
-              <tr>
-                {/* <th>Hash</th> */}
-                <th className="bg-success text-white col-auto">New Value</th>
-                <th className="col-auto">Old Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listItems}
-            </tbody>
-          </Table>
-        </div>
-      </div>
-    )
-  }
-}
+// class EventHistory extends React.Component {
+//   render() {
+//     if (this.props.events.length === 0) {
+//       return < div ></div >
+//     }
+//     // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
+//     // return <ol>{listItems}</ol>
+//     let listItems = this.props.events.map((e) =>
+//       <tr key={e.transactionHash}>
+//         {/* <td>{e.transactionHash}</td> */}
+//         <td className="text-success">{e.newValue}</td>
+//         <td>{e.oldValue}</td>
+//       </tr>
+//     )
+//     return (
+//       <div >
+//         <div className="d-flex justify-content-center">Transaction History</div>
+//         {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
+//         <div className="d-flex justify-content-center">
+//           <Table striped bordered hover size="sm">
+//             <thead>
+//               <tr>
+//                 {/* <th>Hash</th> */}
+//                 <th className="bg-success text-white col-auto">New Value</th>
+//                 <th className="col-auto">Old Value</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {listItems}
+//             </tbody>
+//           </Table>
+//         </div>
+//       </div>
+//     )
+//   }
+// }
 
 class Provider extends React.Component {
   render() {
@@ -198,20 +204,25 @@ class Provider extends React.Component {
 
 class CouponSelector extends React.Component {
   render() {
-    let listItems = this.props.myCoupons.map((e) =>
-      < option key={e}>{e}</option >
+    let couponItems = this.props.myCoupons.map((c) =>
+      <Card style={{ width: '18rem' }}>
+        <Card.Body>
+          <Card.Title>{c.value}</Card.Title>
+          <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
+          <Card.Text>
+            Cash Coupon
+          </Card.Text>
+          <Button variant="primary">Redeem</Button>
+          {/* <Card.Link href="#">Card Link</Card.Link>
+          <Card.Link href="#">Another Link</Card.Link> */}
+        </Card.Body>
+      </Card>
     )
     return (
       <div className="d-flex justify-content-center">
-        <Form inline>
-          <Form.Control as="select">
-            {listItems}
-          </Form.Control>
-          <Button type="submit" className="mb-2">
-            Redeem
-          </Button>
-        </Form>
+        {couponItems}
       </div>
+
     )
   }
 }
