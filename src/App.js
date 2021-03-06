@@ -21,9 +21,7 @@ class App extends React.Component {
       nCoupons: 0,
       web3: null,
       eventHistory: [],
-      myCoupons: [],
-      couponValue: [],
-      couponExpiryDate: []
+      myCoupons: []
     }
   }
 
@@ -68,26 +66,24 @@ class App extends React.Component {
     console.log(`balanceOf(${myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
-    let couponValue = []
-    let couponExpiryDate = []
     for (let i = 0; i < totalSupply.toNumber(); i++) {
       let tokenId = await instance.tokenByIndex(i)
       console.log(`tokenByIndex(${i}): ${tokenId}`)
       let owner = await instance.ownerOf(tokenId)
       console.log(`owner(${tokenId}): ${owner}`)
       if (owner.toString() === myAccount.toString()) {
-        // console.log(`coupon: ${JSON.stringify(coupon)}`)
-        myCoupons.push(tokenId)
+        let c = {}
+        c.tokenId = tokenId.toNumber()
+
         let details = await instance.coupons(tokenId)
-        console.log(`coupons(${tokenId}): ${JSON.stringify(details)}`)
-        couponValue.push(details.value.toNumber())
-        couponExpiryDate.push(details.expiryDate.toString())
+        c.value = details.value.toNumber()
+        c.expiryDate = details.expiryDate.toString()
+        // console.log(`redeemed: ${details.redeemed}`)
+        c.redeemed = (details.redeemed.toString() === "false") ? false : true
+        myCoupons.push(c)
       }
     }
     this.setState({ myCoupons: myCoupons })
-    this.setState({ couponValue: couponValue })
-    this.setState({ couponExpiryDate: couponExpiryDate })
-    console.log(this.state.couponExpiryDate)
   }
 
   // updateEventHistory = async () => {
@@ -192,14 +188,14 @@ class CouponSelector extends React.Component {
 
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <Card key={c} style={{ width: '18rem' }}>
+      <Card key={c.tokenId} style={{ width: '18rem' }}>
         <Card.Body>
-          <Card.Title>${this.props.couponValue}</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">Expiry Date: {this.props.couponExpiryDate}</Card.Subtitle>
+          <Card.Title>${c.value}</Card.Title>
+          <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
           <Card.Text>
             Cash Coupon
           </Card.Text>
-          <Button variant="primary" onClick={(e) => {
+          <Button variant="primary" disabled={c.redeemed} onClick={(e) => {
             e.preventDefault()
             this.redeem(c)
           }}>Redeem</Button>
