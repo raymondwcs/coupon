@@ -6,9 +6,7 @@ import Button from 'react-bootstrap/Button';
 // import FormControl from 'react-bootstrap/FormControl';
 // import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
-
 // import InputGroup from 'react-bootstrap/InputGroup';
-
 // import logo from './logo.svg';
 // import './App.css';
 import getWeb3 from "./getWeb3";
@@ -23,7 +21,9 @@ class App extends React.Component {
       nCoupons: 0,
       web3: null,
       eventHistory: [],
-      myCoupons: []
+      myCoupons: [],
+      couponValue: [],
+      couponExpiryDate: []
     }
   }
 
@@ -62,24 +62,32 @@ class App extends React.Component {
     this.setState({ couponInstance: instance })
     let totalSupply = await instance.totalSupply()
     console.log(`totalSupply(): ${totalSupply.toNumber()}`)
-    
+
     let nCoupons = await instance.balanceOf(myAccount)
     this.setState({ nCoupons: nCoupons.toNumber() })
     console.log(`balanceOf(${myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
+    let couponValue = []
+    let couponExpiryDate = []
     for (let i = 0; i < totalSupply.toNumber(); i++) {
       let tokenId = await instance.tokenByIndex(i)
       console.log(`tokenByIndex(${i}): ${tokenId}`)
       let owner = await instance.ownerOf(tokenId)
       console.log(`owner(${tokenId}): ${owner}`)
       if (owner.toString() === myAccount.toString()) {
-        console.log(`coupon: ${JSON.stringify(coupon)}`)
+        // console.log(`coupon: ${JSON.stringify(coupon)}`)
         myCoupons.push(tokenId)
+        let details = await instance.coupons(tokenId)
+        console.log(`coupons(${tokenId}): ${JSON.stringify(details)}`)
+        couponValue.push(details.value.toNumber())
+        couponExpiryDate.push(details.expiryDate.toString())
       }
     }
-    this.setState({myCoupons: myCoupons})
-    console.log(this.state.myCoupons)
+    this.setState({ myCoupons: myCoupons })
+    this.setState({ couponValue: couponValue })
+    this.setState({ couponExpiryDate: couponExpiryDate })
+    console.log(this.state.couponExpiryDate)
   }
 
   // updateEventHistory = async () => {
@@ -112,7 +120,7 @@ class App extends React.Component {
         <div className="row">
           <div className="col-md-3"></div>
           <div className="col-md-6">
-            <CouponSelector myCoupons={this.state.myCoupons} />
+            <CouponSelector myCoupons={this.state.myCoupons} couponValue={this.state.couponValue} couponExpiryDate={this.state.couponExpiryDate} />
           </div>
           <div className="col-md-3"></div>
         </div>
@@ -183,11 +191,11 @@ class CouponSelector extends React.Component {
   }
 
   render() {
-    let couponItems = this.props.myCoupons.map(c => 
+    let couponItems = this.props.myCoupons.map(c =>
       <Card key={c} style={{ width: '18rem' }}>
         <Card.Body>
-          <Card.Title>$50.00</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">Expiry Date: 2030-12-31</Card.Subtitle>
+          <Card.Title>${this.props.couponValue}</Card.Title>
+          <Card.Subtitle className="mb-2 text-muted">Expiry Date: {this.props.couponExpiryDate}</Card.Subtitle>
           <Card.Text>
             Cash Coupon
           </Card.Text>

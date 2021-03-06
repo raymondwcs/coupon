@@ -19,7 +19,6 @@ contract Coupon is Ownable, ERC721 {
         bool redeemed;
     }
     
-    // mapping (uint256 => bool) public redeemed;
     mapping (uint256 => Coupon) public coupons;
 
     constructor() public ERC721("Coupon", "CPN") {}
@@ -32,12 +31,8 @@ contract Coupon is Ownable, ERC721 {
         _mint(customer, newCouponId);
         _setTokenURI(newCouponId, tokenURI);
 
-        // redeemed[newCouponId] = false;
         Coupon memory c;
-        c.tokenId = newCouponId;
-        c.expiryDate = "2050-12-31";
-        c.value = 50;
-        c.redeemed = false;
+        c = Coupon(newCouponId,"2022-12-31",50,false);
 
         coupons[newCouponId] = c;
 
