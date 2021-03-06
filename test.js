@@ -13,18 +13,22 @@ module.exports = async function main(callback) {
 
         for (let i = 0; i < await coupon.totalSupply(); i++) {
             let tokenId = await coupon.tokenByIndex(i)
-            console.log(`redeemed(${tokenId}) = ${await coupon.redeemed(tokenId)} `)
+            let c = await coupon.coupons(tokenId)
+            // console.log(JSON.stringify(c))
+            console.log(`${tokenId} = ${c.redeemed}`)
         }
 
         try {
-            await coupon.redeemCoupon(1)
+            await coupon.redeem(1)
         } catch (error) {
             console.log(error.message)
         }
 
         for (let i = 0; i < await coupon.totalSupply(); i++) {
             let tokenId = await coupon.tokenByIndex(i)
-            console.log(`redeemed(${tokenId}) = ${await coupon.redeemed(tokenId)} `)
+            let c = await coupon.coupons(tokenId)
+            // console.log(JSON.stringify(c))
+            console.log(`${tokenId} = ${c.redeemed}`)
         }
 
         // let myCoupons = await coupon.myCoupons()

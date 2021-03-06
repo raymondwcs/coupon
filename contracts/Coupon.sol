@@ -12,7 +12,15 @@ contract Coupon is Ownable, ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    mapping (uint256 => bool) public redeemed;
+    struct Coupon { 
+        uint256 tokenId;
+        string expiryDate;
+        uint value;
+        bool redeemed;
+    }
+    
+    // mapping (uint256 => bool) public redeemed;
+    mapping (uint256 => Coupon) public coupons;
 
     constructor() public ERC721("Coupon", "CPN") {}
 
@@ -24,18 +32,25 @@ contract Coupon is Ownable, ERC721 {
         _mint(customer, newCouponId);
         _setTokenURI(newCouponId, tokenURI);
 
-        redeemed[newCouponId] = false;
+        // redeemed[newCouponId] = false;
+        Coupon memory c;
+        c.tokenId = newCouponId;
+        c.expiryDate = "2050-12-31";
+        c.value = 50;
+        c.redeemed = false;
+
+        coupons[newCouponId] = c;
 
         return newCouponId;
     }
 
     event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI);
 
-    function redeemCoupon(uint256 tokenId) public { 
+    function redeem(uint256 tokenId) public { 
         require(ownerOf(tokenId) == msg.sender, "Not Owner");
-        require(redeemed[tokenId] == false, "Already Redeemed");
+        require(coupons[tokenId].redeemed == false, "Already Redeemed");
 
-        redeemed[tokenId] = true;
+        coupons[tokenId].redeemed = true;
 
         emit redeemCouponEvent(msg.sender, tokenId, tokenURI(tokenId));
     }
