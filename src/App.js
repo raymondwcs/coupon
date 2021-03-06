@@ -71,7 +71,7 @@ class App extends React.Component {
       if (owner.toString() === myAccount.toString()) {
         // myCoupons.push(c.toString())
         let coupon = {}
-        coupon.id = c.toString()
+        coupon.tokenId = c.toString()
         coupon.value = "$50.00"
         coupon.expiryDate = "2020-01-01"
         myCoupons.push(coupon)
@@ -94,31 +94,6 @@ class App extends React.Component {
   //     this.setState({ eventHistory: history })
   //   })
   // }
-
-  addTocoupon = (value) => {
-    if (this.state.couponInstance && this.state.accounts) {
-      console.log(`value to be stored is = ${value}`);
-      console.log(`account: ${this.state.accounts}`)
-      this.state.couponInstance.set(value, { from: this.state.accounts[0] })
-        .then((results) => {
-          return this.state.couponInstance.get()
-        }).then((results) => {
-          this.setState(prevState => ({
-            ...prevState,
-            nCoupons: results.toNumber()
-          }));
-          // this.updateEventHistory()
-        }).catch((err) => {
-          console.log('error');
-          console.log(err);
-        });
-    } else {
-      this.setState(prevState => ({
-        ...prevState,
-        error: new Error('simple storage instance not loaded')
-      }))
-    }
-  }
 
   render() {
     if (!this.state.web3) {
@@ -202,17 +177,26 @@ class Provider extends React.Component {
   }
 }
 
+
+
 class CouponSelector extends React.Component {
+  redeem = async (tokenId) => {
+    alert('Under construction!')
+  }
+
   render() {
     let couponItems = this.props.myCoupons.map((c) =>
-      <Card style={{ width: '18rem' }}>
+      <Card key={c.tokenId} style={{ width: '18rem' }}>
         <Card.Body>
           <Card.Title>{c.value}</Card.Title>
           <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
           <Card.Text>
             Cash Coupon
           </Card.Text>
-          <Button variant="primary">Redeem</Button>
+          <Button variant="primary" onClick={(e) => {
+            e.preventDefault()
+            this.redeem(c.tokenId)
+          }}>Redeem</Button>
           {/* <Card.Link href="#">Card Link</Card.Link>
           <Card.Link href="#">Another Link</Card.Link> */}
         </Card.Body>
@@ -222,7 +206,6 @@ class CouponSelector extends React.Component {
       <div className="d-flex justify-content-center">
         {couponItems}
       </div>
-
     )
   }
 }
