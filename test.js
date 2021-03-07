@@ -9,6 +9,9 @@ module.exports = async function main(callback) {
 
         console.log(`owner(): ${await coupon.owner()}`)
         let results = await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        results = await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        results = await coupon.awardCoupon(accounts[1], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+
         console.log(`totalSupply(): ${await coupon.totalSupply()}`)
 
         for (let i = 0; i < await coupon.totalSupply(); i++) {

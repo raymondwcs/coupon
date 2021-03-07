@@ -53,36 +53,37 @@ class App extends React.Component {
 
     // Declaring this for later so we can chain functions on coupon.
     // var couponInstance
-    let myAccount = this.state.accounts[0]
-    console.log(`myAccount: ${myAccount}`)
+    // let myAccount = this.state.accounts[0]
+    // console.log(`myAccount: ${myAccount}`)
 
     let instance = await coupon.deployed()
     this.setState({ couponInstance: instance })
-    let totalSupply = await instance.totalSupply()
-    console.log(`totalSupply(): ${totalSupply.toNumber()}`)
+    // let totalSupply = await instance.totalSupply()
+    // console.log(`totalSupply(): ${totalSupply.toNumber()}`)
 
-    let nCoupons = await instance.balanceOf(myAccount)
-    this.setState({ nCoupons: nCoupons.toNumber() })
-    console.log(`balanceOf(${myAccount}): ${nCoupons.toNumber()}`)
+    // let nCoupons = await instance.balanceOf(myAccount)
+    // this.setState({ nCoupons: nCoupons.toNumber() })
+    // console.log(`balanceOf(${myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
-    for (let i = 0; i < totalSupply.toNumber(); i++) {
-      let tokenId = await instance.tokenByIndex(i)
-      console.log(`tokenByIndex(${i}): ${tokenId}`)
-      let owner = await instance.ownerOf(tokenId)
-      console.log(`owner(${tokenId}): ${owner}`)
-      if (owner.toString() === myAccount.toString()) {
-        let c = {}
-        c.tokenId = tokenId.toNumber()
+    myCoupons = await instance.getMyCoupons();
+    // for (let i = 0; i < totalSupply.toNumber(); i++) {
+    //   let tokenId = await instance.tokenByIndex(i)
+    //   console.log(`tokenByIndex(${i}): ${tokenId}`)
+    //   let owner = await instance.ownerOf(tokenId)
+    //   console.log(`owner(${tokenId}): ${owner}`)
+    //   if (owner.toString() === myAccount.toString()) {
+    //     let c = {}
+    //     c.tokenId = tokenId.toNumber()
 
-        let details = await instance.coupons(tokenId)
-        c.value = details.value.toNumber()
-        c.expiryDate = details.expiryDate.toString()
-        // console.log(`redeemed: ${details.redeemed}`)
-        c.redeemed = (details.redeemed.toString() === "false") ? false : true
-        myCoupons.push(c)
-      }
-    }
+    //     let details = await instance.coupons(tokenId)
+    //     c.value = details.value.toNumber()
+    //     c.expiryDate = details.expiryDate.toString()
+    //     // console.log(`redeemed: ${details.redeemed}`)
+    //     c.redeemed = (details.redeemed.toString() === "false") ? false : true
+    //     myCoupons.push(c)
+    //   }
+    // }
     this.setState({ myCoupons: myCoupons })
   }
 
@@ -192,9 +193,7 @@ class CouponSelector extends React.Component {
         <Card.Body>
           <Card.Title>${c.value}</Card.Title>
           <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
-          <Card.Text>
-            Cash Coupon
-          </Card.Text>
+          <Card.Text>{c.description}</Card.Text>
           <Button variant="primary" disabled={c.redeemed} onClick={(e) => {
             e.preventDefault()
             this.redeem(c)
