@@ -21,7 +21,8 @@ class App extends React.Component {
       nCoupons: 0,
       web3: null,
       eventHistory: [],
-      myCoupons: []
+      myCoupons: [],
+      myAccount: null
     }
   }
 
@@ -53,20 +54,23 @@ class App extends React.Component {
 
     // Declaring this for later so we can chain functions on coupon.
     // var couponInstance
-    // let myAccount = this.state.accounts[0]
-    // console.log(`myAccount: ${myAccount}`)
+    let myAccount = this.state.accounts[0]
+    this.setState({ myAccount: myAccount })
+    console.log(`myAccount: ${this.state.myAccount}`)
 
     let instance = await coupon.deployed()
     this.setState({ couponInstance: instance })
     // let totalSupply = await instance.totalSupply()
     // console.log(`totalSupply(): ${totalSupply.toNumber()}`)
 
-    // let nCoupons = await instance.balanceOf(myAccount)
-    // this.setState({ nCoupons: nCoupons.toNumber() })
-    // console.log(`balanceOf(${myAccount}): ${nCoupons.toNumber()}`)
+    let nCoupons = await instance.balanceOf(this.state.myAccount)
+    this.setState({ nCoupons: nCoupons.toNumber() })
+    console.log(`balanceOf(${this.state.myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
-    myCoupons = await instance.getMyCoupons();
+    myCoupons = await instance.getMyCoupons({ from: this.state.myAccount });
+    console.log(`myCoupons: ${myCoupons}`)
+
     // for (let i = 0; i < totalSupply.toNumber(); i++) {
     //   let tokenId = await instance.tokenByIndex(i)
     //   console.log(`tokenByIndex(${i}): ${tokenId}`)
@@ -111,13 +115,13 @@ class App extends React.Component {
         <Provider network={this.state.network} />
 
         <div className="d-flex justify-content-center">
-          <p>You have: <span className="h3 text-success font-weight-bolder">{this.props.nCoupons}</span> coupon(s)</p>
+          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
         </div>
 
         <div className="row">
           <div className="col-md-3"></div>
           <div className="col-md-6">
-            <CouponSelector myCoupons={this.state.myCoupons} couponValue={this.state.couponValue} couponExpiryDate={this.state.couponExpiryDate} />
+            <CouponSelector myCoupons={this.state.myCoupons} />
           </div>
           <div className="col-md-3"></div>
         </div>
