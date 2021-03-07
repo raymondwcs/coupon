@@ -6,6 +6,9 @@ import Button from 'react-bootstrap/Button';
 // import FormControl from 'react-bootstrap/FormControl';
 // import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
+import CardDeck from 'react-bootstrap/CardDeck';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
 // import './App.css';
@@ -91,6 +94,12 @@ class App extends React.Component {
     this.setState({ myCoupons: myCoupons })
   }
 
+  redeem = async (tokenId) => {
+    await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
+    this.instantiateContract()
+    alert('Coupon redeemed.')
+  }
+
   // updateEventHistory = async () => {
   //   this.state.couponInstance.getPastEvents('ValueChanged', { fromBlock: 0, toBlock: 'latest' }).then(events => {
   //     console.log(JSON.stringify(events))
@@ -110,30 +119,26 @@ class App extends React.Component {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
     return (
-      <div className="App container">
-        <h1 className="d-flex justify-content-center">Coupons</h1>
-        <Provider network={this.state.network} />
+      <Container>
+        <Row className="d-flex justify-content-center">
+          <h1>Coupons</h1>
+        </Row>
 
-        <div className="d-flex justify-content-center">
-          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
-        </div>
+        <Row className="d-flex justify-content-center">
+          <Provider network={this.state.network} />
+        </Row>
 
-        <div className="row">
-          <div className="col-md-3"></div>
-          <div className="col-md-6">
-            <CouponSelector myCoupons={this.state.myCoupons} />
+        <Row className="d-flex justify-content-center">
+          <div >
+            <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
           </div>
-          <div className="col-md-3"></div>
-        </div>
-        <br></br>
-        {/* <div className="row">
-          <div className="col-md-3"></div>
-          <div className="col-md-6">
-            <EventHistory events={this.state.eventHistory} />
-          </div>
-          <div className="col-md-3"></div>
-        </div> */}
-      </div>
+        </Row>
+
+        <Row className="d-flex justify-content-center">
+          <CouponSelector myCoupons={this.state.myCoupons} couponInstance={this.state.couponInstance} myAccount={this.state.myAccount} redeem={this.redeem} />
+        </Row>
+
+      </Container >
 
     );
   }
@@ -187,30 +192,28 @@ class Provider extends React.Component {
 }
 
 class CouponSelector extends React.Component {
-  redeem = async (tokenId) => {
-    alert('Under construction!')
-  }
-
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <Card key={c.tokenId} style={{ width: '18rem' }}>
-        <Card.Body>
-          <Card.Title>${c.value}</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
-          <Card.Text>{c.description}</Card.Text>
-          <Button variant="primary" disabled={c.redeemed} onClick={(e) => {
-            e.preventDefault()
-            this.redeem(c)
-          }}>Redeem</Button>
-          {/* <Card.Link href="#">Card Link</Card.Link>
+      <div key={c.tokenId} className="col-xl-3 col-lg-4 col-md-6">
+        <Card key={c.tokenId} style={{ width: '18rem' }}>
+          <Card.Body>
+            <Card.Title>${c.value}</Card.Title>
+            <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
+            <Card.Text>{c.description}</Card.Text>
+            <Button variant="primary" disabled={c.redeemed} onClick={(e) => {
+              e.preventDefault()
+              this.props.redeem(c.tokenId)
+            }}>Redeem</Button>
+            {/* <Card.Link href="#">Card Link</Card.Link>
           <Card.Link href="#">Another Link</Card.Link> */}
-        </Card.Body>
-      </Card>
+          </Card.Body>
+        </Card>
+      </div>
     )
     return (
-      <div className="d-flex justify-content-center">
+      <CardDeck>
         {couponItems}
-      </div>
+      </CardDeck>
     )
   }
 }

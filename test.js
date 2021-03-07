@@ -8,9 +8,12 @@ module.exports = async function main(callback) {
         const coupon = await Coupon.deployed()
 
         console.log(`owner(): ${await coupon.owner()}`)
-        let results = await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
-        results = await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
-        results = await coupon.awardCoupon(accounts[1], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[0], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[1], "http://erc721-metadata.s3.amazonaws.com/coupons/coupon-50.json", { from: accounts[0] })
 
         console.log(`totalSupply(): ${await coupon.totalSupply()}`)
 
@@ -21,11 +24,11 @@ module.exports = async function main(callback) {
             console.log(`${tokenId} = ${c.redeemed}`)
         }
 
-        try {
-            await coupon.redeem(1)
-        } catch (error) {
-            console.log(error.message)
-        }
+        // try {
+        //     await coupon.redeem(1)
+        // } catch (error) {
+        //     console.log(error.message)
+        // }
 
         for (let i = 0; i < await coupon.totalSupply(); i++) {
             let tokenId = await coupon.tokenByIndex(i)
