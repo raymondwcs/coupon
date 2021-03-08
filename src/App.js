@@ -205,19 +205,24 @@ class CouponSelector extends React.Component {
             <Card.Title>${c.value}</Card.Title>
             <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
             <Card.Text>{c.description}</Card.Text>
-            <Button variant="primary" disabled={c.redeemed} onClick={(e) => {
-              e.preventDefault()
-              this.props.redeem(c.tokenId)
-            }}>Redeem</Button>
-            {/* <Card.Link href="#">Card Link</Card.Link>
-          <Card.Link href="#">Another Link</Card.Link> */}
+            {
+              c.redeemed ?
+                <Card.Text className="font-weight-bold">
+                  Redemmed
+                </Card.Text>
+                :
+                <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
+                  e.preventDefault()
+                  this.props.redeem(c.tokenId)
+                }}>Redeem</Button>
+            }
           </Card.Body>
         </Card>
       </div >
     )
     return (
       <CardDeck>
-        { couponItems}
+        {couponItems}
       </CardDeck >
     )
   }
