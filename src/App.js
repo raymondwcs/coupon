@@ -97,6 +97,11 @@ class App extends React.Component {
   redeem = async (tokenId) => {
     await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
     this.instantiateContract()
+    // this.setState(prevstate => {
+    //   return {
+    //     ...prevstate
+    //   }
+    // })
     alert('Coupon redeemed.')
   }
 
@@ -128,16 +133,13 @@ class App extends React.Component {
           <Provider network={this.state.network} />
         </Row>
 
-        <Row className="d-flex justify-content-center">
-          <div >
-            <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
-          </div>
+        <Row className="d-flex justify-content-center" >
+          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
         </Row>
 
-        <Row className="d-flex justify-content-center">
-          <CouponSelector myCoupons={this.state.myCoupons} couponInstance={this.state.couponInstance} myAccount={this.state.myAccount} redeem={this.redeem} />
+        <Row className="d-flex justify-content-center" >
+          <CouponSelector myCoupons={this.state.myCoupons} nCoupons={this.state.nCoupons} />
         </Row>
-
       </Container >
 
     );
@@ -184,7 +186,7 @@ class App extends React.Component {
 class Provider extends React.Component {
   render() {
     return (
-      <div className="d-flex justify-content-center">
+      <div>
         <h6>Connected to network: <code>{this.props.network.name}</code></h6>
       </div >
     )
