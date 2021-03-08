@@ -2,6 +2,7 @@ import React from 'react';
 // import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.css';
 import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 // import Form from 'react-bootstrap/Form';
 // import FormControl from 'react-bootstrap/FormControl';
 // import Table from 'react-bootstrap/Table';
@@ -21,6 +22,7 @@ class App extends React.Component {
     super(props)
 
     this.state = {
+      showMode: false,
       nCoupons: 0,
       web3: null,
       eventHistory: [],
@@ -96,17 +98,34 @@ class App extends React.Component {
     return nCoupons
   }
 
-  redeem = async (tokenId) => {
-    await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-    let updatedCoupons = [...this.state.myCoupons]
-    let coupon2Update = updatedCoupons[tokenId - 1]
-    coupon2Update.redeemed = true
-    updatedCoupons[tokenId - 1] = coupon2Update
-    this.setState({ myCoupons: updatedCoupons })
 
-    this.setState({ nCoupons: this.nCoupons() })
+  handleModalShowMode = () => {
+    let currentMode = !this.state.showMode
+    this.setState({ showMode: currentMode })
+  }
 
-    alert('Coupon redeemed.')
+  setCoupon2Redeem = (tokenId) => {
+    this.setState({ coupon2Redeem: tokenId })
+    this.handleModalShowMode()
+  }
+
+  redeem = async () => {
+    this.handleModalShowMode()
+    if (this.state.coupon2Redeem) {
+      let tokenId = this.state.coupon2Redeem
+      await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
+      let updatedCoupons = [...this.state.myCoupons]
+      let coupon2Update = updatedCoupons[tokenId - 1]
+      coupon2Update.redeemed = true
+      updatedCoupons[tokenId - 1] = coupon2Update
+      this.setState({ myCoupons: updatedCoupons })
+
+      this.setState({ nCoupons: this.nCoupons() })
+
+      this.setState({ coupon2Redeem: undefined })
+      alert('Coupon redeemed.')
+    }
+
   }
 
   // updateEventHistory = async () => {
@@ -141,8 +160,23 @@ class App extends React.Component {
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
         </Row>
 
-        <Row className="d-flex justify-content-center" >
-          <CouponSelector myCoupons={this.state.myCoupons} redeem={this.redeem} />
+        <Modal show={this.state.showMode} onHide={this.handleModalShowMode}>
+          <Modal.Header closeButton>
+            <Modal.Title>Redeem Coupon</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body>
+            <p>Redeem this coupon?</p>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={this.handleModalShowMode}>Cancel</Button>
+            <Button variant="primary" onClick={this.redeem}>Redeem</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Row>
+          <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
         </Row>
       </Container >
     );
@@ -199,8 +233,8 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      < div key={c.tokenId} className="col-xl-3 col-lg-4 col-md-6" >
-        <Card key={c.tokenId} style={{ width: '18rem' }} bg={c.redeemed ? "black" : "light"}>
+      < div key={c.tokenId} className="col-lg-4 d-flex align-items-stretch">
+        <Card key={c.tokenId} style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
             <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
@@ -213,7 +247,8 @@ class CouponSelector extends React.Component {
                 :
                 <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
                   e.preventDefault()
-                  this.props.redeem(c.tokenId)
+                  // this.props.redeem(c.tokenId)
+                  this.props.setCoupon2Redeem(c.tokenId)
                 }}>Redeem</Button>
             }
           </Card.Body>
@@ -221,9 +256,11 @@ class CouponSelector extends React.Component {
       </div >
     )
     return (
-      <CardDeck>
-        {couponItems}
-      </CardDeck >
+      <div>
+        <CardDeck>
+          {couponItems}
+        </CardDeck >
+      </div>
     )
   }
 }
