@@ -22,6 +22,7 @@ contract Coupon is Ownable, ERC721 {
     }
     
     mapping (uint256 => CouponItem) public coupons;
+    uint256 [] public tokenIds;
 
     constructor() public ERC721("Coupon", "CPN") {}
 
@@ -33,11 +34,16 @@ contract Coupon is Ownable, ERC721 {
         _mint(customer, newCouponId);
         _setTokenURI(newCouponId, tokenURI);
 
-        CouponItem memory c;
-        c = CouponItem(newCouponId,"Cash Coupon","2022-12-31",50,false);
+        ////CouponItem memory c;
+        ////c = CouponItem(newCouponId,"Cash Coupon","2022-12-31",50,false);
 
-        coupons[newCouponId] = c;
-
+        coupons[newCouponId].tokenId = newCouponId;
+        coupons[newCouponId].description = "Cash Coupon";
+        coupons[newCouponId].expiryDate = "2022-12-31";
+        coupons[newCouponId].value = 50;
+        coupons[newCouponId].redeemed = false;
+        tokenIds.push(newCouponId);
+        
         return newCouponId;
     }
 
@@ -54,7 +60,6 @@ contract Coupon is Ownable, ERC721 {
 
     function getMyCoupons() public view returns (CouponItem[] memory) {
         CouponItem [] memory myCoupons = new CouponItem[](balanceOf(msg.sender));
-        CouponItem storage c;
         uint256 tokenId;
 
         if (balanceOf(msg.sender) > 0) {
@@ -62,9 +67,8 @@ contract Coupon is Ownable, ERC721 {
             for (uint i = 0; i < totalSupply(); i++) {
                 tokenId = tokenByIndex(i);
                 if (ownerOf(tokenId) == msg.sender) {
-                    c = coupons[tokenId];
-                    myCoupons[j] = c;
-                    j += 1;
+                    myCoupons[j] = coupons[tokenId];
+                    j++;
                 }
             }
         }

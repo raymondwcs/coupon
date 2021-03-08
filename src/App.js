@@ -71,7 +71,16 @@ class App extends React.Component {
     console.log(`balanceOf(${this.state.myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
-    myCoupons = await instance.getMyCoupons({ from: this.state.myAccount });
+    let x = await instance.getMyCoupons({ from: this.state.myAccount });
+    myCoupons = x.map(c => {
+      let coupon = {}
+      coupon.tokenId = c.tokenId
+      coupon.description = c.description
+      coupon.value = c.value
+      coupon.expiryDate = c.expiryDate
+      coupon.redeemed = c.redeemed
+      return coupon
+    })
     console.log(`myCoupons: ${myCoupons}`)
 
     // for (let i = 0; i < totalSupply.toNumber(); i++) {
@@ -96,12 +105,11 @@ class App extends React.Component {
 
   redeem = async (tokenId) => {
     await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-    this.instantiateContract()
-    // this.setState(prevstate => {
-    //   return {
-    //     ...prevstate
-    //   }
-    // })
+    let updatedCoupons = [...this.state.myCoupons]
+    let coupon2Update = updatedCoupons[tokenId - 1]
+    coupon2Update.redeemed = true
+    updatedCoupons[tokenId - 1] = coupon2Update
+    this.setState({ myCoupons: updatedCoupons })
     alert('Coupon redeemed.')
   }
 
@@ -138,10 +146,9 @@ class App extends React.Component {
         </Row>
 
         <Row className="d-flex justify-content-center" >
-          <CouponSelector myCoupons={this.state.myCoupons} nCoupons={this.state.nCoupons} />
+          <CouponSelector myCoupons={this.state.myCoupons} redeem={this.redeem} />
         </Row>
       </Container >
-
     );
   }
 }
