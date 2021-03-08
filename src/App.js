@@ -66,9 +66,9 @@ class App extends React.Component {
     // let totalSupply = await instance.totalSupply()
     // console.log(`totalSupply(): ${totalSupply.toNumber()}`)
 
-    let nCoupons = await instance.balanceOf(this.state.myAccount)
-    this.setState({ nCoupons: nCoupons.toNumber() })
-    console.log(`balanceOf(${this.state.myAccount}): ${nCoupons.toNumber()}`)
+    // let nCoupons = await instance.balanceOf(this.state.myAccount)
+    // this.setState({ nCoupons: nCoupons.toNumber() })
+    // console.log(`balanceOf(${this.state.myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
     let x = await instance.getMyCoupons({ from: this.state.myAccount });
@@ -82,25 +82,18 @@ class App extends React.Component {
       return coupon
     })
     console.log(`myCoupons: ${myCoupons}`)
-
-    // for (let i = 0; i < totalSupply.toNumber(); i++) {
-    //   let tokenId = await instance.tokenByIndex(i)
-    //   console.log(`tokenByIndex(${i}): ${tokenId}`)
-    //   let owner = await instance.ownerOf(tokenId)
-    //   console.log(`owner(${tokenId}): ${owner}`)
-    //   if (owner.toString() === myAccount.toString()) {
-    //     let c = {}
-    //     c.tokenId = tokenId.toNumber()
-
-    //     let details = await instance.coupons(tokenId)
-    //     c.value = details.value.toNumber()
-    //     c.expiryDate = details.expiryDate.toString()
-    //     // console.log(`redeemed: ${details.redeemed}`)
-    //     c.redeemed = (details.redeemed.toString() === "false") ? false : true
-    //     myCoupons.push(c)
-    //   }
-    // }
     this.setState({ myCoupons: myCoupons })
+
+    console.log(`nCoupons: ${this.nCoupons()}`)
+    this.setState({ nCoupons: this.nCoupons() })
+  }
+
+  nCoupons = () => {
+    let nCoupons = 0
+    for (let c of this.state.myCoupons) {
+      if (!c.redeemed) nCoupons++
+    }
+    return nCoupons
   }
 
   redeem = async (tokenId) => {
@@ -110,6 +103,9 @@ class App extends React.Component {
     coupon2Update.redeemed = true
     updatedCoupons[tokenId - 1] = coupon2Update
     this.setState({ myCoupons: updatedCoupons })
+
+    this.setState({ nCoupons: this.nCoupons() })
+
     alert('Coupon redeemed.')
   }
 
@@ -142,7 +138,7 @@ class App extends React.Component {
         </Row>
 
         <Row className="d-flex justify-content-center" >
-          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> coupon(s)</p>
+          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
         </Row>
 
         <Row className="d-flex justify-content-center" >
@@ -203,8 +199,8 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div key={c.tokenId} className="col-xl-3 col-lg-4 col-md-6">
-        <Card key={c.tokenId} style={{ width: '18rem' }}>
+      < div key={c.tokenId} className="col-xl-3 col-lg-4 col-md-6" >
+        <Card key={c.tokenId} style={{ width: '18rem' }} bg={c.redeemed ? "black" : "light"}>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
             <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
@@ -217,12 +213,12 @@ class CouponSelector extends React.Component {
           <Card.Link href="#">Another Link</Card.Link> */}
           </Card.Body>
         </Card>
-      </div>
+      </div >
     )
     return (
       <CardDeck>
-        {couponItems}
-      </CardDeck>
+        { couponItems}
+      </CardDeck >
     )
   }
 }
