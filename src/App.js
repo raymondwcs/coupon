@@ -97,9 +97,17 @@ class App extends React.Component {
     return nCoupons
   }
 
-  handleModalShowMode = () => {
-    let currentMode = !this.state.showMode
-    this.setState({ showMode: currentMode })
+  // handleModalShowMode = () => {
+  //   let currentMode = !this.state.showMode
+  //   this.setState({ showMode: currentMode })
+  // }
+
+  dismissModal = () => {
+    this.setState({ showMode: false })
+  }
+
+  displayModal = () => {
+    this.setState({ showMode: true })
   }
 
   setCoupon2Redeem = (tokenId) => {
@@ -110,11 +118,11 @@ class App extends React.Component {
     coupon2RedeemMessage.expiryDate = coupon2Redeem[tokenId - 1].expiryDate
     coupon2RedeemMessage.description = coupon2Redeem[tokenId - 1].description
     this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
-    this.handleModalShowMode()
+    this.displayModal()
   }
 
   redeem = async () => {
-    this.handleModalShowMode()
+    this.dismissModal()
     if (this.state.coupon2Redeem) {
       let tokenId = this.state.coupon2Redeem
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
@@ -166,24 +174,26 @@ class App extends React.Component {
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
         </div>
 
-        <Modal show={this.state.showMode} onHide={this.handleModalShowMode}>
+        <Modal show={this.state.showMode} onHide={this.dismissModal}>
           <Modal.Header closeButton>
             <Modal.Title>Redeem this Coupon?</Modal.Title>
           </Modal.Header>
 
           <Modal.Body>
-            <p>
-              Serial no.: {this.state.coupon2Redeem}<br></br>
-              {JSON.stringify(this.state.coupon2RedeemMessage)}<br></br>
-            </p>
-
-          </Modal.Body>
+            <p>Serial no.: <b>{this.state.coupon2Redeem}</b></p>
+            {/* {JSON.stringify(this.state.coupon2RedeemMessage)}<br></br> */}
+            <ul>
+              <li>{(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.description}</li>
+              <li>Value: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.value}</li>
+              <li>Expiry Date: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.expiryDate}</li>
+            </ul>
+          </Modal.Body >
 
           <Modal.Footer>
-            <Button variant="secondary" onClick={this.handleModalShowMode}>Cancel</Button>
+            <Button variant="secondary" onClick={this.dismissModal}>Cancel</Button>
             <Button variant="primary" onClick={this.redeem}>Redeem</Button>
           </Modal.Footer>
-        </Modal>
+        </Modal >
 
         <div className="row d-flex justify-content-center" >
           <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
@@ -243,7 +253,7 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div key={c.tokenId} className="col-lg-4 col-md-6 col-sm-12 mt-3">
+      <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-4 d-flex align-self-stretch">
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
