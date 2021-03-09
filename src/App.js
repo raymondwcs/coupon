@@ -7,7 +7,6 @@ import Modal from 'react-bootstrap/Modal';
 // import FormControl from 'react-bootstrap/FormControl';
 // import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
-import CardDeck from 'react-bootstrap/CardDeck';
 import Container from 'react-bootstrap/Container';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
@@ -15,6 +14,7 @@ import Container from 'react-bootstrap/Container';
 import getWeb3 from "./getWeb3";
 
 import CouponContract from "./build/contracts/Coupon.json";
+import { CardGroup } from 'react-bootstrap';
 
 class App extends React.Component {
   constructor(props) {
@@ -26,7 +26,7 @@ class App extends React.Component {
       web3: null,
       eventHistory: [],
       myCoupons: [],
-      coupon2Redeem: 0,
+      coupon2RedeemMessage: {},
       myAccount: null
     }
   }
@@ -111,9 +111,9 @@ class App extends React.Component {
   }
 
   setCoupon2Redeem = (tokenId) => {
-    this.setState({ coupon2Redeem: tokenId })
     let coupon2Redeem = this.state.myCoupons
     let coupon2RedeemMessage = {}
+    coupon2RedeemMessage.tokenId = tokenId
     coupon2RedeemMessage.value = coupon2Redeem[tokenId - 1].value
     coupon2RedeemMessage.expiryDate = coupon2Redeem[tokenId - 1].expiryDate
     coupon2RedeemMessage.description = coupon2Redeem[tokenId - 1].description
@@ -123,8 +123,8 @@ class App extends React.Component {
 
   redeem = async () => {
     this.dismissModal()
-    if (this.state.coupon2Redeem) {
-      let tokenId = this.state.coupon2Redeem
+    if (this.state.coupon2RedeemMessage) {
+      let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
       let updatedCoupons = [...this.state.myCoupons]
       let coupon2Update = updatedCoupons[tokenId - 1]
@@ -135,9 +135,8 @@ class App extends React.Component {
 
       this.setState({ nCoupons: this.nCoupons() })
 
-      this.setState({ coupon2Redeem: undefined })
       this.setState({ coupon2RedeemMessage: undefined })
-      alert(`Coupon redeemed. (ref. tokenId: ${tokenId} tx: ${results.tx}) `)
+      alert(`Succesfully Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
     }
   }
 
@@ -162,15 +161,15 @@ class App extends React.Component {
 
     return (
       <Container>
-        <div className="d-flex justify-content-center">
+        <div className="row d-flex justify-content-center">
           <h1>Coupons</h1>
         </div>
 
-        <div className="d-flex justify-content-center">
+        <div className="row d-flex justify-content-center">
           <Provider network={this.state.network} />
         </div>
 
-        <div className="d-flex justify-content-center" >
+        <div className="row d-flex justify-content-center" >
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
         </div>
 
@@ -180,8 +179,9 @@ class App extends React.Component {
           </Modal.Header>
 
           <Modal.Body>
-            <p>Serial no.: <b>{this.state.coupon2Redeem}</b></p>
-            {/* {JSON.stringify(this.state.coupon2RedeemMessage)}<br></br> */}
+            <p className="h6">No. <span className="font-weight-bolder">
+              {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.tokenId}</span>
+            </p>
             <ul>
               <li>{(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.description}</li>
               <li>Value: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.value}</li>
@@ -253,12 +253,14 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-4 d-flex align-self-stretch">
+      <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-4">
+        {/* <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-4 d-flex align-self-stretch"> */}
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
+          <Card.Header>No. {c.tokenId}</Card.Header>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">Serial no. {c.tokenId}</Card.Subtitle>
-            <Card.Text>{c.description}</Card.Text>
+            <Card.Subtitle className="mb-2 text-muted">{c.description}</Card.Subtitle>
+            {/* <Card.Text>{c.description}</Card.Text> */}
             {
               c.redeemed ?
                 <Card.Text>
@@ -279,13 +281,13 @@ class CouponSelector extends React.Component {
             }
           </Card.Body>
         </Card>
-      </div>
+      </div >
     )
     return (
-      <CardDeck>
+      <CardGroup>
         {/* <div className="div d-flex align-items-stretch justify-content-center "> */}
         {couponItems}
-      </CardDeck>
+      </CardGroup>
     )
   }
 }
