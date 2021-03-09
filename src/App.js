@@ -9,7 +9,6 @@ import Modal from 'react-bootstrap/Modal';
 import Card from 'react-bootstrap/Card';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
 // import './App.css';
@@ -27,6 +26,7 @@ class App extends React.Component {
       web3: null,
       eventHistory: [],
       myCoupons: [],
+      coupon2Redeem: 0,
       myAccount: null
     }
   }
@@ -66,11 +66,9 @@ class App extends React.Component {
     let instance = await coupon.deployed()
     this.setState({ couponInstance: instance })
     // let totalSupply = await instance.totalSupply()
-    // console.log(`totalSupply(): ${totalSupply.toNumber()}`)
 
     // let nCoupons = await instance.balanceOf(this.state.myAccount)
     // this.setState({ nCoupons: nCoupons.toNumber() })
-    // console.log(`balanceOf(${this.state.myAccount}): ${nCoupons.toNumber()}`)
 
     let myCoupons = []
     let x = await instance.getMyCoupons({ from: this.state.myAccount });
@@ -81,6 +79,7 @@ class App extends React.Component {
       coupon.value = c.value
       coupon.expiryDate = c.expiryDate
       coupon.redeemed = c.redeemed
+      coupon.redeemedTimeStamp = c.redeemedTimeStamp
       return coupon
     })
     console.log(`myCoupons: ${myCoupons}`)
@@ -93,11 +92,10 @@ class App extends React.Component {
   nCoupons = () => {
     let nCoupons = 0
     for (let c of this.state.myCoupons) {
-      if (!c.redeemed) nCoupons++
+      if (!c.redeemed && c.tokenId !== 0) nCoupons++
     }
     return nCoupons
   }
-
 
   handleModalShowMode = () => {
     let currentMode = !this.state.showMode
@@ -106,6 +104,12 @@ class App extends React.Component {
 
   setCoupon2Redeem = (tokenId) => {
     this.setState({ coupon2Redeem: tokenId })
+    let coupon2Redeem = this.state.myCoupons
+    let coupon2RedeemMessage = {}
+    coupon2RedeemMessage.value = coupon2Redeem[tokenId - 1].value
+    coupon2RedeemMessage.expiryDate = coupon2Redeem[tokenId - 1].expiryDate
+    coupon2RedeemMessage.description = coupon2Redeem[tokenId - 1].description
+    this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
     this.handleModalShowMode()
   }
 
@@ -113,19 +117,20 @@ class App extends React.Component {
     this.handleModalShowMode()
     if (this.state.coupon2Redeem) {
       let tokenId = this.state.coupon2Redeem
-      await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
+      let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
       let updatedCoupons = [...this.state.myCoupons]
       let coupon2Update = updatedCoupons[tokenId - 1]
       coupon2Update.redeemed = true
+      coupon2Update.redeemedTimeStamp = new Date().getTime() / 1000
       updatedCoupons[tokenId - 1] = coupon2Update
       this.setState({ myCoupons: updatedCoupons })
 
       this.setState({ nCoupons: this.nCoupons() })
 
       this.setState({ coupon2Redeem: undefined })
-      alert('Coupon redeemed.')
+      this.setState({ coupon2RedeemMessage: undefined })
+      alert(`Coupon redeemed. (ref. tokenId: ${tokenId} tx: ${results.tx}) `)
     }
-
   }
 
   // updateEventHistory = async () => {
@@ -146,27 +151,32 @@ class App extends React.Component {
     if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
+
     return (
       <Container>
-        <Row className="d-flex justify-content-center">
+        <div className="d-flex justify-content-center">
           <h1>Coupons</h1>
-        </Row>
+        </div>
 
-        <Row className="d-flex justify-content-center">
+        <div className="d-flex justify-content-center">
           <Provider network={this.state.network} />
-        </Row>
+        </div>
 
-        <Row className="d-flex justify-content-center" >
+        <div className="d-flex justify-content-center" >
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
-        </Row>
+        </div>
 
         <Modal show={this.state.showMode} onHide={this.handleModalShowMode}>
           <Modal.Header closeButton>
-            <Modal.Title>Redeem Coupon</Modal.Title>
+            <Modal.Title>Redeem this Coupon?</Modal.Title>
           </Modal.Header>
 
           <Modal.Body>
-            <p>Redeem this coupon?</p>
+            <p>
+              Serial no.: {this.state.coupon2Redeem}<br></br>
+              {JSON.stringify(this.state.coupon2RedeemMessage)}<br></br>
+            </p>
+
           </Modal.Body>
 
           <Modal.Footer>
@@ -175,9 +185,9 @@ class App extends React.Component {
           </Modal.Footer>
         </Modal>
 
-        <Row>
+        <div className="row d-flex justify-content-center" >
           <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
-        </Row>
+        </div>
       </Container >
     );
   }
@@ -233,58 +243,41 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      < div key={c.tokenId} className="col-lg-4 d-flex align-items-stretch">
-        <Card key={c.tokenId} style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
+      <div key={c.tokenId} className="col-lg-4 col-md-6 col-sm-12 mt-3">
+        <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">Expiry Date: {c.expiryDate}</Card.Subtitle>
+            <Card.Subtitle className="mb-2 text-muted">Serial no. {c.tokenId}</Card.Subtitle>
             <Card.Text>{c.description}</Card.Text>
             {
               c.redeemed ?
-                <Card.Text className="font-weight-bold">
-                  Redemmed
+                <Card.Text>
+                  <span className="text-success font-weight-bold">Redemmed</span><br></br>
+                  <small>{new Date(c.redeemedTimeStamp * 1000).toLocaleString()}</small>
                 </Card.Text>
                 :
-                <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
-                  e.preventDefault()
-                  // this.props.redeem(c.tokenId)
-                  this.props.setCoupon2Redeem(c.tokenId)
-                }}>Redeem</Button>
+                <div>
+                  <Card.Text>
+                    Expiry Date: {c.expiryDate}
+                  </Card.Text>
+                  <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
+                    e.preventDefault()
+                    this.props.setCoupon2Redeem(c.tokenId)
+                  }}>Redeem
+                </Button>
+                </div>
             }
           </Card.Body>
         </Card>
-      </div >
+      </div>
     )
     return (
-      <div>
-        <CardDeck>
-          {couponItems}
-        </CardDeck >
-      </div>
+      <CardDeck>
+        {/* <div className="div d-flex align-items-stretch justify-content-center "> */}
+        {couponItems}
+      </CardDeck>
     )
   }
 }
 
-/*
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-*/
 export default App;

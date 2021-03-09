@@ -19,6 +19,7 @@ contract Coupon is Ownable, ERC721 {
         string expiryDate;
         uint value;
         bool redeemed;
+        uint256 redeemedTimeStamp;
     }
     
     mapping (uint256 => CouponItem) public coupons;
@@ -47,15 +48,16 @@ contract Coupon is Ownable, ERC721 {
         return newCouponId;
     }
 
-    event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI);
+    event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
 
     function redeem(uint256 tokenId) public { 
         require(ownerOf(tokenId) == msg.sender, "Not Owner");
         require(coupons[tokenId].redeemed == false, "Already Redeemed");
 
         coupons[tokenId].redeemed = true;
+        coupons[tokenId].redeemedTimeStamp = now;
 
-        emit redeemCouponEvent(msg.sender, tokenId, tokenURI(tokenId));
+        emit redeemCouponEvent(msg.sender, tokenId, tokenURI(tokenId), now);
     }
 
     function getMyCoupons() public view returns (CouponItem[] memory) {
