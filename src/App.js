@@ -231,7 +231,7 @@ class EventHistory extends React.Component {
     )
     return (
       <div >
-        <div className="d-flex justify-content-center">Transaction History</div>
+        <div className="d-flex justify-content-center">Redeem History</div>
         {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
         <div className="d-flex justify-content-center">
           <Table striped bordered hover size="sm">
