@@ -27,6 +27,8 @@ contract Coupon is Ownable, ERC721 {
 
     constructor() public ERC721("Coupon", "CPN") {}
 
+    event awardCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
+
     function awardCoupon(address customer, string memory tokenURI) public onlyOwner returns (uint256)
     {
         _tokenIds.increment();
@@ -44,6 +46,8 @@ contract Coupon is Ownable, ERC721 {
         coupons[newCouponId].value = 50;
         coupons[newCouponId].redeemed = false;
         tokenIds.push(newCouponId);
+        
+        emit awardCouponEvent(msg.sender, newCouponId, tokenURI, now);
         
         return newCouponId;
     }

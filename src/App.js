@@ -5,8 +5,9 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 // import Form from 'react-bootstrap/Form';
 // import FormControl from 'react-bootstrap/FormControl';
-// import Table from 'react-bootstrap/Table';
+import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
+import { CardGroup } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
@@ -14,7 +15,6 @@ import Container from 'react-bootstrap/Container';
 import getWeb3 from "./getWeb3";
 
 import CouponContract from "./build/contracts/Coupon.json";
-import { CardGroup } from 'react-bootstrap';
 
 class App extends React.Component {
   constructor(props) {
@@ -44,7 +44,14 @@ class App extends React.Component {
         })
 
         // Instantiate contract once web3 provided.
-        this.instantiateContract()
+        return this.instantiateContract()
+      })
+      .then(myCoupons => {
+        console.log(`myCoupons: ${myCoupons}`)
+        return this.updateEventHistory()
+      })
+      .then(eventHistory => {
+        console.log(`eventHistory: ${eventHistory}`)
       })
       .catch((error) => {
         console.log(error)
@@ -87,6 +94,8 @@ class App extends React.Component {
 
     console.log(`nCoupons: ${this.nCoupons()}`)
     this.setState({ nCoupons: this.nCoupons() })
+
+    return myCoupons
   }
 
   nCoupons = () => {
@@ -96,11 +105,6 @@ class App extends React.Component {
     }
     return nCoupons
   }
-
-  // handleModalShowMode = () => {
-  //   let currentMode = !this.state.showMode
-  //   this.setState({ showMode: currentMode })
-  // }
 
   dismissModal = () => {
     this.setState({ showMode: false })
@@ -134,25 +138,27 @@ class App extends React.Component {
       this.setState({ myCoupons: updatedCoupons })
 
       this.setState({ nCoupons: this.nCoupons() })
-
+      this.updateEventHistory()
       this.setState({ coupon2RedeemMessage: undefined })
+
       alert(`Succesfully Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
     }
   }
 
-  // updateEventHistory = async () => {
-  //   this.state.couponInstance.getPastEvents('ValueChanged', { fromBlock: 0, toBlock: 'latest' }).then(events => {
-  //     console.log(JSON.stringify(events))
-  //     let history = events.map(e => {
-  //       return ({
-  //         transactionHash: e.transactionHash,
-  //         oldValue: e.returnValues.oldValue,
-  //         newValue: e.returnValues.newValue
-  //       })
-  //     })
-  //     this.setState({ eventHistory: history })
-  //   })
-  // }
+  updateEventHistory = async () => {
+    this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' }).then(events => {
+      console.log(JSON.stringify(events))
+      let history = events.map(e => {
+        return ({
+          transactionHash: e.transactionHash,
+          tokenId: e.returnValues.tokenId,
+          blockTimeStamp: e.returnValues.blockTimeStamp
+        })
+      })
+      this.setState({ eventHistory: history })
+      return history
+    })
+  }
 
   render() {
     if (!this.state.web3) {
@@ -198,47 +204,53 @@ class App extends React.Component {
         <div className="row d-flex justify-content-center" >
           <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
         </div>
+
+        <br></br>
+        <div className="row d-flex justify-content-center" >
+          <EventHistory events={this.state.eventHistory} />
+        </div>
+
       </Container >
     );
   }
 }
 
-// class EventHistory extends React.Component {
-//   render() {
-//     if (this.props.events.length === 0) {
-//       return < div ></div >
-//     }
-//     // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
-//     // return <ol>{listItems}</ol>
-//     let listItems = this.props.events.map((e) =>
-//       <tr key={e.transactionHash}>
-//         {/* <td>{e.transactionHash}</td> */}
-//         <td className="text-success">{e.newValue}</td>
-//         <td>{e.oldValue}</td>
-//       </tr>
-//     )
-//     return (
-//       <div >
-//         <div className="d-flex justify-content-center">Transaction History</div>
-//         {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
-//         <div className="d-flex justify-content-center">
-//           <Table striped bordered hover size="sm">
-//             <thead>
-//               <tr>
-//                 {/* <th>Hash</th> */}
-//                 <th className="bg-success text-white col-auto">New Value</th>
-//                 <th className="col-auto">Old Value</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {listItems}
-//             </tbody>
-//           </Table>
-//         </div>
-//       </div>
-//     )
-//   }
-// }
+class EventHistory extends React.Component {
+  render() {
+    if (this.props.events.length === 0) {
+      return < div ></div >
+    }
+    // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
+    // return <ol>{listItems}</ol>
+    let listItems = this.props.events.map((e) =>
+      <tr key={e.transactionHash}>
+        <td>{e.tokenId}</td>
+        <td>{e.transactionHash}</td>
+        <td>{new Date(e.blockTimeStamp * 1000).toLocaleString()}</td>
+      </tr>
+    )
+    return (
+      <div >
+        <div className="d-flex justify-content-center">Transaction History</div>
+        {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
+        <div className="d-flex justify-content-center">
+          <Table striped bordered hover size="sm">
+            <thead>
+              <tr>
+                <th className="col-auto">Coupon No.</th>
+                <th className="col-auto">Tx Hash</th>
+                <th className="col-auto">Date/Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listItems}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+    )
+  }
+}
 
 class Provider extends React.Component {
   render() {
