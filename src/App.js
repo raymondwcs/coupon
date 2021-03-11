@@ -7,7 +7,7 @@ import Modal from 'react-bootstrap/Modal';
 // import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
-import { CardGroup } from 'react-bootstrap';
+import CardDeck from 'react-bootstrap/CardDeck';
 import Container from 'react-bootstrap/Container';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
@@ -167,41 +167,43 @@ class App extends React.Component {
 
     return (
       <Container>
-        <div className="row d-flex justify-content-center">
+        <div className="d-flex flex-row justify-content-center">
           <h1>Coupons</h1>
         </div>
 
-        <div className="row d-flex justify-content-center">
+        <div className="d-flex flex-row justify-content-center">
           <Provider network={this.state.network} />
         </div>
 
-        <div className="row d-flex justify-content-center" >
+        <div className="d-flex flex-row justify-content-center" >
           <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
         </div>
 
-        <Modal show={this.state.showMode} onHide={this.dismissModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Redeem this Coupon?</Modal.Title>
-          </Modal.Header>
+        <div className="d-flex flex-row justify-content-center" >
+          <Modal show={this.state.showMode} onHide={this.dismissModal}>
+            <Modal.Header closeButton>
+              <Modal.Title>Redeem this Coupon?</Modal.Title>
+            </Modal.Header>
 
-          <Modal.Body>
-            <p className="h6">No. <span className="font-weight-bolder">
-              {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.tokenId}</span>
-            </p>
-            <ul>
-              <li>{(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.description}</li>
-              <li>Value: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.value}</li>
-              <li>Expiry Date: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.expiryDate}</li>
-            </ul>
-          </Modal.Body >
+            <Modal.Body>
+              <p className="h6">No. <span className="font-weight-bolder">
+                {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.tokenId}</span>
+              </p>
+              <ul>
+                <li>{(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.description}</li>
+                <li>Value: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.value}</li>
+                <li>Expiry Date: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.expiryDate}</li>
+              </ul>
+            </Modal.Body >
 
-          <Modal.Footer>
-            <Button variant="secondary" onClick={this.dismissModal}>Cancel</Button>
-            <Button variant="primary" onClick={this.redeem}>Redeem</Button>
-          </Modal.Footer>
-        </Modal >
+            <Modal.Footer>
+              <Button variant="secondary" onClick={this.dismissModal}>Cancel</Button>
+              <Button variant="primary" onClick={this.redeem}>Redeem</Button>
+            </Modal.Footer>
+          </Modal >
+        </div>
 
-        <div className="row d-flex justify-content-center" >
+        <div className="d-flex flex-row justify-content-center" >
           <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
         </div>
 
@@ -271,7 +273,7 @@ class CouponSelector extends React.Component {
           <Card.Header>No. {c.tokenId}</Card.Header>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">{c.description}</Card.Subtitle>
+            <Card.Subtitle>{c.description}</Card.Subtitle>
             {
               c.redeemed ?
                 <Card.Text>
@@ -295,10 +297,10 @@ class CouponSelector extends React.Component {
       </div >
     )
     return (
-      <CardGroup>
+      <CardDeck>
         {/* <div className="div d-flex align-items-stretch justify-content-center "> */}
         {couponItems}
-      </CardGroup>
+      </CardDeck>
     )
   }
 }
