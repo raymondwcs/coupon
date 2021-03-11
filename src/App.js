@@ -234,7 +234,6 @@ class EventHistory extends React.Component {
     return (
       <div >
         <div className="d-flex justify-content-center">Redeem History</div>
-        {/* <div className="d-flex justify-content-center table-wrapper-scroll-y my-custom-scrollbar"> */}
         <div className="d-flex justify-content-center">
           <Table striped bordered hover size="sm">
             <thead>
@@ -298,7 +297,6 @@ class CouponSelector extends React.Component {
     )
     return (
       <CardDeck>
-        {/* <div className="div d-flex align-items-stretch justify-content-center "> */}
         {couponItems}
       </CardDeck>
     )
