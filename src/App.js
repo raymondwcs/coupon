@@ -206,7 +206,7 @@ class App extends React.Component {
         </div>
 
         <br></br>
-        <div className="row d-flex justify-content-center" >
+        <div className="d-flex flex-row justify-content-center align-items-stretch" >
           <EventHistory events={this.state.eventHistory} />
         </div>
 
@@ -265,14 +265,13 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-6 mt-3">
-        {/* <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-4 d-flex align-self-stretch"> */}
+      <div key={c.tokenId} className="d-flex p-2">
+        {/* <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-6 mt-3"> */}
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Header>No. {c.tokenId}</Card.Header>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
             <Card.Subtitle className="mb-2 text-muted">{c.description}</Card.Subtitle>
-            {/* <Card.Text>{c.description}</Card.Text> */}
             {
               c.redeemed ?
                 <Card.Text>
