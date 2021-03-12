@@ -10,7 +10,7 @@ services:
     networks:
       - nodeapp-network
 
-  truffleapp:
+  coupon-app:
     container_name: coupon-app
     image: coupon-app
     build: .

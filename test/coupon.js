@@ -1,7 +1,7 @@
 const Coupon = artifacts.require("Coupon");
 
 contract("1st Coupon test", async accounts => {
-    it("award 1 coupon to first account, 1 coupon to second account", async () => {
+    it("award 1 coupon to account[0], 1 coupon to account[1]", async () => {
         let instance = await Coupon.deployed()
 
         console.log(`owner: ${await instance.owner()}`)
@@ -15,58 +15,31 @@ contract("1st Coupon test", async accounts => {
         let acc1 = await instance.balanceOf(accounts[1])
 
         assert.equal(totalSupply, 2)
-        assert.equal(acc0, 1);
+        assert.equal(acc0, 1)
+        assert.equal(acc1, 1)
     })
 
-    /*
-    it("should put 10000 MetaCoin in the first account", async () => {
-        let instance = await MetaCoin.deployed();
-        let balance = await instance.getBalance.call(accounts[0]);
-        assert.equal(balance.valueOf(), 10000);
-    });
+    it("account[0] redeems 1 coupon", async () => {
+        let instance = await Coupon.deployed()
 
-    it("should call a function that depends on a linked library", async () => {
-        let meta = await MetaCoin.deployed();
-        let outCoinBalance = await meta.getBalance.call(accounts[0]);
-        let metaCoinBalance = outCoinBalance.toNumber();
-        let outCoinBalanceEth = await meta.getBalanceInEth.call(accounts[0]);
-        let metaCoinEthBalance = outCoinBalanceEth.toNumber();
-        assert.equal(metaCoinEthBalance, 2 * metaCoinBalance);
-    });
+        let totalSupply = await instance.totalSupply()
+        let myCoupons = await instance.getMyCoupons()
+        let acc0 = await instance.balanceOf(accounts[0])
+        assert.equal(acc0, 1)
+        assert.equal(myCoupons.length, 1)
 
-    it("should send coin correctly", async () => {
-        // Get initial balances of first and second account.
-        let account_one = accounts[0];
-        let account_two = accounts[1];
+        var i = 0;
+        while (i < myCoupons.length) {
+            // let tokenId = await instance.tokenByIndex(i)
+            let tokenId = myCoupons[i].tokenId
+            if (await instance.ownerOf(tokenId) == accounts[0]) {
+                await instance.redeem(tokenId)
+                break;
+            }
+            i++
+        }
 
-        let amount = 10;
-
-        let instance = await MetaCoin.deployed();
-        let meta = instance;
-
-        let balance = await meta.getBalance.call(account_one);
-        let account_one_starting_balance = balance.toNumber();
-
-        balance = await meta.getBalance.call(account_two);
-        let account_two_starting_balance = balance.toNumber();
-        await meta.sendCoin(account_two, amount, { from: account_one });
-
-        balance = await meta.getBalance.call(account_one);
-        let account_one_ending_balance = balance.toNumber();
-
-        balance = await meta.getBalance.call(account_two);
-        let account_two_ending_balance = balance.toNumber();
-
-        assert.equal(
-            account_one_ending_balance,
-            account_one_starting_balance - amount,
-            "Amount wasn't correctly taken from the sender"
-        );
-        assert.equal(
-            account_two_ending_balance,
-            account_two_starting_balance + amount,
-            "Amount wasn't correctly sent to the receiver"
-        );
-    });
-    */
+        myCoupons = await instance.getMyCoupons()
+        assert.equal(myCoupons[i].redeemed, true)
+    })
 });
