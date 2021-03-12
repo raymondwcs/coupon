@@ -1,5 +1,11 @@
 const Coupon = artifacts.require("Coupon");
 
+// Import utilities from Test Helpers
+const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
+
+const TOKEN_URI = "http://example.com/coupon/50"
+
 contract("1st Coupon test", async accounts => {
     it("award 1 coupon to account[0], 1 coupon to account[1]", async () => {
         let instance = await Coupon.deployed()
@@ -7,8 +13,13 @@ contract("1st Coupon test", async accounts => {
         console.log(`owner: ${await instance.owner()}`)
         console.log(`accounts: ${accounts[0]}`)
 
-        await instance.awardCoupon(accounts[0], "http://example.com/coupon/50")
-        await instance.awardCoupon(accounts[1], "http://example.com/coupon/50")
+        let receipt = await instance.awardCoupon(accounts[0], TOKEN_URI)
+        expectEvent(receipt, 'awardCouponEvent', {
+            customer: accounts[0],
+            tokenURI: TOKEN_URI,
+        })
+
+        await instance.awardCoupon(accounts[1], TOKEN_URI)
 
         let totalSupply = await instance.totalSupply()
         let acc0 = await instance.balanceOf(accounts[0])
@@ -33,13 +44,39 @@ contract("1st Coupon test", async accounts => {
             // let tokenId = await instance.tokenByIndex(i)
             let tokenId = myCoupons[i].tokenId
             if (await instance.ownerOf(tokenId) == accounts[0]) {
-                await instance.redeem(tokenId)
+                let receipt = await instance.redeem(tokenId)
+                expectEvent(receipt, 'redeemCouponEvent', {
+                    customer: accounts[0],
+                    tokenId: tokenId,
+                    tokenURI: TOKEN_URI
+                })
+                myCoupons = await instance.getMyCoupons()
+                assert.equal(myCoupons[i].redeemed, true)
                 break;
             }
             i++
         }
+    })
 
-        myCoupons = await instance.getMyCoupons()
-        assert.equal(myCoupons[i].redeemed, true)
+    it("account[0] redeems a coupon owned by account[1]", async () => {
+        let instance = await Coupon.deployed()
+
+        let totalSupply = await instance.totalSupply()
+        let myCoupons = await instance.getMyCoupons()
+        let acc1 = await instance.balanceOf(accounts[1])
+        assert.equal(acc1, 1)
+        assert.equal(myCoupons.length, 1)
+
+        var i = 0;
+        while (i < myCoupons.length) {
+            // let tokenId = await instance.tokenByIndex(i)
+            let tokenId = myCoupons[i].tokenId
+            if (await instance.ownerOf(tokenId) == accounts[0]) {
+                // await expectRevert(instance.redeem(tokenId, { from: accounts[1] }), "Not Owner -- Reason given: Not Owner.")
+                await expectRevert(instance.redeem(tokenId, { from: accounts[1] }), "Not Owner")
+                break;
+            }
+            i++
+        }
     })
 });
