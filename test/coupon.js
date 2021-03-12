@@ -61,22 +61,12 @@ contract("1st Coupon test", async accounts => {
     it("account[0] redeems a coupon owned by account[1]", async () => {
         let instance = await Coupon.deployed()
 
-        let totalSupply = await instance.totalSupply()
-        let myCoupons = await instance.getMyCoupons()
+        let myCoupons = await instance.getMyCoupons({ from: accounts[1] })
         let acc1 = await instance.balanceOf(accounts[1])
         assert.equal(acc1, 1)
         assert.equal(myCoupons.length, 1)
 
-        var i = 0;
-        while (i < myCoupons.length) {
-            // let tokenId = await instance.tokenByIndex(i)
-            let tokenId = myCoupons[i].tokenId
-            if (await instance.ownerOf(tokenId) == accounts[0]) {
-                // await expectRevert(instance.redeem(tokenId, { from: accounts[1] }), "Not Owner -- Reason given: Not Owner.")
-                await expectRevert(instance.redeem(tokenId, { from: accounts[1] }), "Not Owner")
-                break;
-            }
-            i++
-        }
+        let tokenId = myCoupons[0].tokenId
+        await expectRevert(instance.redeem(tokenId, { from: accounts[0] }), "Not Owner")
     })
 });
