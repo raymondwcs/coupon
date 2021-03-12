@@ -1,0 +1,28 @@
+version: "2"
+services:
+  ganache-cli:
+    container_name: ganache-cli
+    image: trufflesuite/ganache-cli
+    command: ["--port", "8545", "--host", "0.0.0.0", "-d", "--mnemonic", "gesture rather obey video awake genuine patient base soon parrot upset lounge"]
+    restart: on-failure
+    ports:
+      - "8545:8545"
+    networks:
+      - nodeapp-network
+
+  truffleapp:
+    container_name: coupon-app
+    image: coupon-app
+    build: .
+    command: bash -c "truffle migrate --network development && truffle exec --network development awardCoupon.js && cp env-sample .env && yarn start"
+    restart: on-failure
+    depends_on: 
+      - "ganache-cli"
+    ports:
+      - "3000:3000"
+    networks:
+      - nodeapp-network
+
+networks:
+  nodeapp-network:
+    driver: bridge
