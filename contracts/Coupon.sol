@@ -25,7 +25,7 @@ contract Coupon is Ownable, ERC721 {
     mapping (uint256 => CouponItem) public coupons;
     uint256 [] public tokenIds;
 
-    constructor() public ERC721("Coupon", "CPN") {}
+    constructor() public ERC721("CryptoCoupon", "CryptoCoupon") {}
 
     event awardCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
 
