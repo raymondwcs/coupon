@@ -4,7 +4,7 @@ const Coupon = artifacts.require("Coupon");
 const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
-const TOKEN_URI = "http://example.com/coupon/50"
+const TOKEN_URI = "https://erc-721.s3.amazonaws.com/uri/coupon-50.json"
 
 contract("1st Coupon test", async accounts => {
     it("award 1 coupon to account[0], 1 coupon to account[1]", async () => {

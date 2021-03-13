@@ -16,6 +16,7 @@ contract Coupon is Ownable, ERC721 {
     struct CouponItem { 
         uint256 tokenId;
         string description;
+        string tokenURI;
         string expiryDate;
         uint value;
         bool redeemed;
@@ -42,7 +43,8 @@ contract Coupon is Ownable, ERC721 {
 
         coupons[newCouponId].tokenId = newCouponId;
         coupons[newCouponId].description = "Cash Coupon";
-        coupons[newCouponId].expiryDate = "2022-12-31";
+        coupons[newCouponId].tokenURI = tokenURI;
+        coupons[newCouponId].expiryDate = "2050-12-31";
         coupons[newCouponId].value = 50;
         coupons[newCouponId].redeemed = false;
         tokenIds.push(newCouponId);

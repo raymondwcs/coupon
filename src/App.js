@@ -21,7 +21,7 @@ class App extends React.Component {
     super(props)
 
     this.state = {
-      showMode: false,
+      modalShowMode: false,
       nCoupons: 0,
       web3: null,
       eventHistory: [],
@@ -83,6 +83,7 @@ class App extends React.Component {
       let coupon = {}
       coupon.tokenId = c.tokenId
       coupon.description = c.description
+      coupon.tokenURI = c.tokenURI
       coupon.value = c.value
       coupon.expiryDate = c.expiryDate
       coupon.redeemed = c.redeemed
@@ -90,6 +91,7 @@ class App extends React.Component {
       return coupon
     })
     console.log(`myCoupons: ${myCoupons}`)
+    console.log(`URI: ${myCoupons[0].tokenURI}`)
     this.setState({ myCoupons: myCoupons })
 
     console.log(`nCoupons: ${this.nCoupons()}`)
@@ -107,11 +109,11 @@ class App extends React.Component {
   }
 
   dismissModal = () => {
-    this.setState({ showMode: false })
+    this.setState({ modalShowMode: false })
   }
 
   displayModal = () => {
-    this.setState({ showMode: true })
+    this.setState({ modalShowMode: true })
   }
 
   setCoupon2Redeem = (tokenId) => {
@@ -180,7 +182,7 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
-          <Modal show={this.state.showMode} onHide={this.dismissModal}>
+          <Modal show={this.state.modalShowMode} onHide={this.dismissModal}>
             <Modal.Header closeButton>
               <Modal.Title>Redeem this Coupon?</Modal.Title>
             </Modal.Header>
@@ -204,7 +206,9 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
-          <CouponSelector myCoupons={this.state.myCoupons} setCoupon2Redeem={this.setCoupon2Redeem} />
+          <CouponSelector myCoupons={this.state.myCoupons}
+            setCoupon2Redeem={this.setCoupon2Redeem}
+          />
         </div>
 
         <br></br>
@@ -272,7 +276,12 @@ class CouponSelector extends React.Component {
           <Card.Header>No. {c.tokenId}</Card.Header>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
-            <Card.Subtitle>{c.description}</Card.Subtitle>
+            <Card.Subtitle>
+              {c.description}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info" viewBox="0 0 16 16" onClick={(e) => { alert(c.tokenURI) }}>
+                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+              </svg>
+            </Card.Subtitle>
             {
               c.redeemed ?
                 <Card.Text>

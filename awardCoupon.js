@@ -1,4 +1,4 @@
-// scripts/index.js
+const TOKEN_URI = "https://erc-721.s3.amazonaws.com/uri/coupon-50.json"
 module.exports = async function main(callback) {
     try {
         const accounts = await web3.eth.getAccounts()
@@ -8,9 +8,9 @@ module.exports = async function main(callback) {
         console.log(`Contract owner: ${await coupon.owner()}`)
 
         for (let i = 0; i < 5; i++) {
-            await coupon.awardCoupon(accounts[0], "http://example.com/coupons/50.json", { from: accounts[0] })
+            await coupon.awardCoupon(accounts[0], TOKEN_URI, { from: accounts[0] })
         }
-        await coupon.awardCoupon(accounts[1], "http://example.com/coupons/50.json", { from: accounts[0] })
+        await coupon.awardCoupon(accounts[1], TOKEN_URI, { from: accounts[0] })
 
         console.log(`totalSupply(): ${await coupon.totalSupply()}`)
 
