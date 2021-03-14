@@ -91,7 +91,6 @@ class App extends React.Component {
       return coupon
     })
     console.log(`myCoupons: ${myCoupons}`)
-    console.log(`URI: ${myCoupons[0].tokenURI}`)
     this.setState({ myCoupons: myCoupons })
 
     console.log(`nCoupons: ${this.nCoupons()}`)
@@ -273,32 +272,42 @@ class CouponSelector extends React.Component {
       <div key={c.tokenId} className="d-flex p-2">
         {/* <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-6 mt-3"> */}
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
-          <Card.Header>No. {c.tokenId}</Card.Header>
+          <Card.Header as="h6">No. {c.tokenId}</Card.Header>
           <Card.Body>
             <Card.Title>${c.value}</Card.Title>
             <Card.Subtitle>
               {c.description}
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info" viewBox="0 0 16 16" onClick={(e) => { alert(c.tokenURI) }}>
-                <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-              </svg>
             </Card.Subtitle>
-            {
-              c.redeemed ?
-                <Card.Text>
-                  <span className="text-success font-weight-bold">Redemmed</span><br></br>
-                  <small>{new Date(c.redeemedTimeStamp * 1000).toLocaleString()}</small>
-                </Card.Text>
-                :
-                <div>
+            <div class="d-flex flex-row">
+              {
+                c.redeemed ?
                   <Card.Text>
-                    Expiry Date: {c.expiryDate}
+                    <span className="text-success font-weight-bold">Redemmed</span><br></br>
+                    <small>{new Date(c.redeemedTimeStamp * 1000).toLocaleString()}</small>
                   </Card.Text>
-                  <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
-                    e.preventDefault()
-                    this.props.setCoupon2Redeem(c.tokenId)
-                  }}>Redeem
-                </Button>
+                  :
+                  <div>
+                    <Card.Text>
+                      Expiry Date: {c.expiryDate}
+                    </Card.Text>
+                    <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
+                      e.preventDefault()
+                      this.props.setCoupon2Redeem(c.tokenId)
+                    }}>Redeem
+                    </Button>
+                  </div>
+              }
+            </div>
+            {
+              !c.redeemed ?
+                <div class="d-flex flex-row-reverse align-self-end">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16" onClick={(e) => { alert(c.tokenURI) }} className="float-left">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                  </svg>
                 </div>
+                :
+                <div></div>
             }
           </Card.Body>
         </Card>
