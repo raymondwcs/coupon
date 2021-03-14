@@ -7,7 +7,6 @@ import Modal from 'react-bootstrap/Modal';
 // import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
-import CardDeck from 'react-bootstrap/CardDeck';
 import Container from 'react-bootstrap/Container';
 // import InputGroup from 'react-bootstrap/InputGroup';
 // import logo from './logo.svg';
@@ -269,7 +268,7 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div className="d-flex p-1">
+      <div class="d-flex col justify-content-center align-items-stretch mt-3">
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Header as="h6">No. {c.tokenId}</Card.Header>
           <Card.Body>
@@ -277,7 +276,7 @@ class CouponSelector extends React.Component {
             <Card.Subtitle>
               {c.description}
             </Card.Subtitle>
-            <div class="d-flex flex-row">
+            <div class="d-flex">
               {
                 c.redeemed ?
                   <Card.Text>
@@ -313,9 +312,9 @@ class CouponSelector extends React.Component {
 
     )
     return (
-      <CardDeck>
+      <div class="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1">
         {couponItems}
-      </CardDeck>
+      </div>
     )
   }
 }
