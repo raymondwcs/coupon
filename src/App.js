@@ -269,8 +269,7 @@ class Provider extends React.Component {
 class CouponSelector extends React.Component {
   render() {
     let couponItems = this.props.myCoupons.map(c =>
-      <div key={c.tokenId} className="d-flex p-1">
-        {/* <div key={c.tokenId} className="col-sm-12 col-md-6 col-lg-6 mt-3"> */}
+      <div className="d-flex p-1">
         <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
           <Card.Header as="h6">No. {c.tokenId}</Card.Header>
           <Card.Body>
@@ -310,7 +309,8 @@ class CouponSelector extends React.Component {
             </div>
           </Card.Footer>
         </Card>
-      </div >
+      </div>
+
     )
     return (
       <CardDeck>
