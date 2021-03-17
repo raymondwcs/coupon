@@ -14,7 +14,7 @@ services:
     container_name: coupon-app
     image: coupon-app
     build: .
-    command: bash -c "truffle migrate --network development && truffle exec --network development awardCoupon.js && cp env-sample .env && yarn start"
+    command: bash -c "truffle migrate --network ganache && truffle exec --network ganache awardCoupon.js && cp env-sample .env && yarn start"
     restart: on-failure
     depends_on: 
       - "ganache-cli"
