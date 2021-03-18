@@ -26,8 +26,9 @@ module.exports = async function main(callback) {
                         if (log.topics[0] === f.signature) {  // match `topics' against abi
                             console.log(`Name: '${f.name}', type: ${f.type}`)
                             try {
+                                let topics = (f.anonymous) ? log.topics : log.topics.slice(1)
                                 var event = await web3.eth.abi.decodeLog(
-                                    f.inputs, log.data, log.topics.slice(1)
+                                    f.inputs, log.data, topics
                                 )
                                 console.log(event)
                             } catch (error) {
