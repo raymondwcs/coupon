@@ -1,4 +1,4 @@
-// truffle exec --network ganache SimpleStorage
+// truffle exec --network ganache events.js <<Arificats>>
 
 module.exports = async function main(callback) {
     try {
@@ -23,7 +23,7 @@ module.exports = async function main(callback) {
                 // console.log(txReceipt)
                 for (log of txReceipt.logs) {
                     for (f of Contract.abi) {
-                        if (f.signature === log.topics[0]) {  // match `topics' against abi
+                        if (log.topics[0] === f.signature) {  // match `topics' against abi
                             console.log(`Name: '${f.name}', type: ${f.type}`)
                             try {
                                 var event = await web3.eth.abi.decodeLog(
@@ -37,6 +37,7 @@ module.exports = async function main(callback) {
                                 console.log(log.topics)
                             }
                         }
+                        continue
                     }
                 }
             }
