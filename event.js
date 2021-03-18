@@ -1,4 +1,4 @@
-// truffle exec --network ganache events.js <<Arificats>>
+// truffle exec --network ganache event.js <<Arificats>>
 
 module.exports = async function main(callback) {
     try {
