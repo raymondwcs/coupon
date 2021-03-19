@@ -2,8 +2,12 @@
 
 module.exports = async function main(callback) {
     try {
+        if (!process.argv[6]) {
+            console.log(`missing abi!`)
+            callback(1)
+        }
         const accounts = await web3.eth.getAccounts()
-        const Contract = artifacts.require(process.argv[6])
+        const Contract = artifacts.require(process.argv[6]) // need this to run!
         const instance = await Contract.deployed()
 
         let currentBlockNumber = await web3.eth.getBlockNumber()
