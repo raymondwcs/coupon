@@ -1,7 +1,7 @@
 const path = require("path");
-require('dotenv').config()
-const HDWalletProvider = require("@truffle/hdwallet-provider");
-const { API_URL, MNEMONIC } = process.env;
+// require('dotenv').config()
+// const HDWalletProvider = require("@truffle/hdwallet-provider");
+// const { REACT_APP_API_URL, REACT_APP_MNEMONIC } = process.env;
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,

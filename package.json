@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@metamask/detect-provider": "^1.2.0",
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@testing-library/jest-dom": "^5.11.4",
@@ -10,7 +11,6 @@
     "@testing-library/user-event": "^12.1.10",
     "@truffle/contract": "^4.3.9",
     "@truffle/hdwallet-provider": "^1.2.2",
-    "@metamask/detect-provider": "^1.2.0",
     "bootstrap": "^4.6.0",
     "chai": "^4.3.3",
     "dotenv": "^8.2.0",

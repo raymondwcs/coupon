@@ -1,4 +1,2 @@
-API_URL = "http://ganache-cli:8545"
 REACT_APP_API_URL = "http://localhost:8545"
-MNEMONIC = "gesture rather obey video awake genuine patient base soon parrot upset lounge"
 REACT_APP_MNEMONIC = "gesture rather obey video awake genuine patient base soon parrot upset lounge"
