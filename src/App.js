@@ -3,14 +3,9 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.css';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-// import Form from 'react-bootstrap/Form';
-// import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
 import Card from 'react-bootstrap/Card';
 import Container from 'react-bootstrap/Container';
-// import InputGroup from 'react-bootstrap/InputGroup';
-// import logo from './logo.svg';
-// import './App.css';
 import getWeb3 from "./getWeb3";
 
 import CouponContract from "./build/contracts/Coupon.json";
@@ -20,20 +15,18 @@ class App extends React.Component {
     super(props)
 
     this.state = {
-      modalShowMode: false,
-      nCoupons: 0,
+      showRedeemModal: false,     // controls the display of redeem modal
+      coupon2RedeemMessage: {},   // message to be displayed in the redeem modal
+      nCoupons: 0,                // number of unredeemed coupon
       web3: null,
-      eventHistory: [],
-      myCoupons: [],
-      coupon2RedeemMessage: {},
-      myAccount: null
+      eventHistory: [],           // awardCouponEvent events
+      myCoupons: [],              // copy of coupons (obtainde from the network)
+      myAccount: null             // accounts[]
     }
   }
 
   componentDidMount() {
     // Get network provider and web3 instance.
-    // See utils/getWeb3 for more info.
-
     getWeb3
       .then(results => {
         this.setState({
@@ -43,7 +36,7 @@ class App extends React.Component {
         })
 
         // Instantiate contract once web3 provided.
-        return this.instantiateContract()
+        return this.instantiateContract()   // returns a copy of my coupons
       })
       .then(myCoupons => {
         console.log(`myCoupons: ${myCoupons}`)
@@ -107,15 +100,16 @@ class App extends React.Component {
   }
 
   dismissModal = () => {
-    this.setState({ modalShowMode: false })
+    this.setState({ showRedeemModal: false })
   }
 
   displayModal = () => {
-    this.setState({ modalShowMode: true })
+    this.setState({ showRedeemModal: true })
   }
 
   setCoupon2Redeem = (tokenId) => {
     let coupon2Redeem = this.state.myCoupons
+    // prepare the modal message...
     let coupon2RedeemMessage = {}
     coupon2RedeemMessage.tokenId = tokenId
     coupon2RedeemMessage.value = coupon2Redeem[tokenId - 1].value
@@ -130,12 +124,12 @@ class App extends React.Component {
     if (this.state.coupon2RedeemMessage) {
       let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-      let updatedCoupons = [...this.state.myCoupons]
-      let coupon2Update = updatedCoupons[tokenId - 1]
+      let updatedCoupons = [...this.state.myCoupons]    // make a copy of myCoupons
+      let coupon2Update = updatedCoupons[tokenId - 1]   // make a copy of the coupon to be redeemed from myCoupons
       coupon2Update.redeemed = true
       coupon2Update.redeemedTimeStamp = new Date().getTime() / 1000
       updatedCoupons[tokenId - 1] = coupon2Update
-      this.setState({ myCoupons: updatedCoupons })
+      this.setState({ myCoupons: updatedCoupons })      // replace/update myCoupons in state
 
       this.setState({ nCoupons: this.nCoupons() })
       this.updateEventHistory()
@@ -180,7 +174,7 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
-          <Modal show={this.state.modalShowMode} onHide={this.dismissModal}>
+          <Modal show={this.state.showRedeemModal} onHide={this.dismissModal}>
             <Modal.Header closeButton>
               <Modal.Title>Redeem this Coupon?</Modal.Title>
             </Modal.Header>
@@ -288,10 +282,10 @@ class CouponSelector extends React.Component {
                     <Card.Text>
                       Expiry Date: {c.expiryDate}
                     </Card.Text>
-                    <Button className variant="primary" disabled={c.redeemed} onClick={(e) => {
-                      e.preventDefault()
-                      this.props.setCoupon2Redeem(c.tokenId)
-                    }}>Redeem
+                    <Button className variant="primary" disabled={c.redeemed} onClick={
+                      (event) => {
+                        this.props.setCoupon2Redeem(c.tokenId)
+                      }}>Redeem
                     </Button>
                   </div>
               }

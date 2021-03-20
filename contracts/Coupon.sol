@@ -38,7 +38,7 @@ contract Coupon is Ownable, ERC721 {
         _setTokenURI(newCouponId, tokenURI);
 
         CouponItem memory newCoupon;
-        newCoupon = CouponItem(newCouponId,"Cash Coupon",tokenURI,"2050-12-31",50,false,now);
+        newCoupon = CouponItem(newCouponId,"Cash Coupon",tokenURI,"2050-12-31",50,false,0);
         coupons[newCouponId] = newCoupon;
         
         emit awardCouponEvent(msg.sender, newCouponId, tokenURI, now);
