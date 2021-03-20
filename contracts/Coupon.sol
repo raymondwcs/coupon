@@ -24,37 +24,27 @@ contract Coupon is Ownable, ERC721 {
     }
     
     mapping (uint256 => CouponItem) public coupons;
-    uint256 [] public tokenIds;
+
+    event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
+    event awardCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
 
     constructor() public ERC721("CryptoCoupon", "CryptoCoupon") {}
 
-    event awardCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
-
-    function awardCoupon(address customer, string memory tokenURI) public onlyOwner returns (uint256)
-    {
+    function awardCoupon(address customer, string memory tokenURI) public onlyOwner returns (uint256) {
         _tokenIds.increment();
 
         uint256 newCouponId = _tokenIds.current();
         _mint(customer, newCouponId);
         _setTokenURI(newCouponId, tokenURI);
 
-        ////CouponItem memory c;
-        ////c = CouponItem(newCouponId,"Cash Coupon","2022-12-31",50,false);
-
-        coupons[newCouponId].tokenId = newCouponId;
-        coupons[newCouponId].description = "Cash Coupon";
-        coupons[newCouponId].tokenURI = tokenURI;
-        coupons[newCouponId].expiryDate = "2050-12-31";
-        coupons[newCouponId].value = 50;
-        coupons[newCouponId].redeemed = false;
-        tokenIds.push(newCouponId);
+        CouponItem memory newCoupon;
+        newCoupon = CouponItem(newCouponId,"Cash Coupon",tokenURI,"2050-12-31",50,false,now);
+        coupons[newCouponId] = newCoupon;
         
         emit awardCouponEvent(msg.sender, newCouponId, tokenURI, now);
         
         return newCouponId;
     }
-
-    event redeemCouponEvent(address customer, uint256 tokenId, string tokenURI, uint256 blockTimeStamp);
 
     function redeem(uint256 tokenId) public { 
         require(ownerOf(tokenId) == msg.sender, "Not Owner");
