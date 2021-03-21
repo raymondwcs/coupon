@@ -194,6 +194,10 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center">
+          <ContractAddress contractInstance={this.state.couponInstance} />
+        </div>
+
+        <div className="d-flex flex-row justify-content-center">
           <AccountSelector accounts={this.state.accounts} switchAccount={this.switchAccount} defaultAccount={this.state.myAccount} />
         </div>
 
