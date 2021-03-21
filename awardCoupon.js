@@ -9,8 +9,8 @@ module.exports = async function main(callback) {
 
         for (let i = 0; i < 5; i++) {
             await coupon.awardCoupon(accounts[0], TOKEN_URI, { from: accounts[0] })
+            await coupon.awardCoupon(accounts[1], TOKEN_URI, { from: accounts[0] })
         }
-        await coupon.awardCoupon(accounts[1], TOKEN_URI, { from: accounts[0] })
 
         console.log(`totalSupply(): ${await coupon.totalSupply()}`)
 

@@ -36,11 +36,14 @@ class App extends React.Component {
         })
 
         // Instantiate contract once web3 provided.
-        return this.instantiateContract()   // returns a copy of my coupons
+        return this.instantiateContract()   // returns contract instance
+      })
+      .then(instance => {
+        return this.updateMyCoupons()       // returns a copy of my coupons
       })
       .then(myCoupons => {
         console.log(`myCoupons: ${myCoupons}`)
-        return this.updateEventHistory()
+        return this.updateEventHistory()    // returns evnet history
       })
       .then(eventHistory => {
         console.log(`eventHistory: ${eventHistory}`)
@@ -56,21 +59,22 @@ class App extends React.Component {
     const coupon = contract(CouponContract)
     coupon.setProvider(this.state.web3.currentProvider)
 
-    // Declaring this for later so we can chain functions on coupon.
-    // var couponInstance
     let myAccount = this.state.accounts[0]
     this.setState({ myAccount: myAccount })
     console.log(`myAccount: ${this.state.myAccount}`)
 
     let instance = await coupon.deployed()
     this.setState({ couponInstance: instance })
-    // let totalSupply = await instance.totalSupply()
 
+    return instance
+    // let totalSupply = await instance.totalSupply()
     // let nCoupons = await instance.balanceOf(this.state.myAccount)
     // this.setState({ nCoupons: nCoupons.toNumber() })
+  }
 
+  updateMyCoupons = async () => {
     let myCoupons = []
-    let x = await instance.getMyCoupons({ from: this.state.myAccount });
+    let x = await this.state.couponInstance.getMyCoupons({ from: this.state.myAccount });
     myCoupons = x.map(c => {
       let coupon = {}
       coupon.tokenId = c.tokenId
@@ -108,15 +112,18 @@ class App extends React.Component {
   }
 
   setCoupon2Redeem = (tokenId) => {
-    let coupon2Redeem = this.state.myCoupons
-    // prepare the modal message...
-    let coupon2RedeemMessage = {}
-    coupon2RedeemMessage.tokenId = tokenId
-    coupon2RedeemMessage.value = coupon2Redeem[tokenId - 1].value
-    coupon2RedeemMessage.expiryDate = coupon2Redeem[tokenId - 1].expiryDate
-    coupon2RedeemMessage.description = coupon2Redeem[tokenId - 1].description
-    this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
-    this.displayModal()
+    for (let c of this.state.myCoupons) {
+      if (c.tokenId === tokenId) {
+        // prepare the modal message...
+        let coupon2RedeemMessage = {}
+        coupon2RedeemMessage.tokenId = tokenId
+        coupon2RedeemMessage.value = c.value
+        coupon2RedeemMessage.expiryDate = c.expiryDate
+        coupon2RedeemMessage.description = c.description
+        this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
+        this.displayModal()
+      }
+    }
   }
 
   redeem = async () => {
@@ -124,6 +131,7 @@ class App extends React.Component {
     if (this.state.coupon2RedeemMessage) {
       let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
+      /*
       let updatedCoupons = [...this.state.myCoupons]    // make a copy of myCoupons
       let coupon2Update = updatedCoupons[tokenId - 1]   // make a copy of the coupon to be redeemed from myCoupons
       coupon2Update.redeemed = true
@@ -132,6 +140,10 @@ class App extends React.Component {
       this.setState({ myCoupons: updatedCoupons })      // replace/update myCoupons in state
 
       this.setState({ nCoupons: this.nCoupons() })
+      this.updateEventHistory()
+      this.setState({ coupon2RedeemMessage: undefined })
+      */
+      this.updateMyCoupons()
       this.updateEventHistory()
       this.setState({ coupon2RedeemMessage: undefined })
 
