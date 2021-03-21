@@ -282,9 +282,25 @@ class EventHistory extends React.Component {
 class Provider extends React.Component {
   render() {
     return (
-      <div>
-        <h6>Connected to network: <code>{this.props.network.name}</code></h6>
+      <div className="d-flex justify-content-center">
+        <small>Connected to network: <code className="text-info">{this.props.network.name}</code></small>
       </div >
+    )
+  }
+}
+
+class ContractAddress extends React.Component {
+  render() {
+    // console.log(this.props.contractInstance)
+    return (
+      (this.props.contractInstance !== undefined) ?
+        <div className="d-flex justify-content-center">
+          <small>Contract address: <code className="text-info">{this.props.contractInstance.address}</code></small>
+        </div>
+        :
+        <div className="d-flex justify-content-center">
+          <small className="text-danger">Contract not deployed</small>
+        </div>
     )
   }
 }
