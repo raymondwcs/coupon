@@ -9,6 +9,8 @@ import Container from 'react-bootstrap/Container';
 import getWeb3 from "./getWeb3";
 
 import CouponContract from "./build/contracts/Coupon.json";
+import { Form } from 'react-bootstrap';
+import { Col } from 'react-bootstrap';
 
 class App extends React.Component {
   constructor(props) {
@@ -103,6 +105,15 @@ class App extends React.Component {
     return nCoupons
   }
 
+  switchAccount = (account) => {
+    // alert(`switchAccount(${account})`)
+    this.setState({ myAccount: account }, () => {
+      this.updateMyCoupons()
+      this.updateEventHistory()
+    })
+    console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
+  }
+
   dismissModal = () => {
     this.setState({ showRedeemModal: false })
   }
@@ -154,7 +165,8 @@ class App extends React.Component {
   updateEventHistory = async () => {
     this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' }).then(events => {
       console.log(JSON.stringify(events))
-      let history = events.map(e => {
+      let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
+      let history = filteredEvents.map(e => {
         return ({
           transactionHash: e.transactionHash,
           tokenId: e.returnValues.tokenId,
@@ -179,6 +191,10 @@ class App extends React.Component {
 
         <div className="d-flex flex-row justify-content-center">
           <Provider network={this.state.network} />
+        </div>
+
+        <div className="d-flex flex-row justify-content-center">
+          <AccountSelector accounts={this.state.accounts} switchAccount={this.switchAccount} defaultAccount={this.state.myAccount} />
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
@@ -210,7 +226,9 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
-          <CouponSelector myCoupons={this.state.myCoupons}
+          <CouponSelector
+            myAccount={this.state.myAccount}
+            myCoupons={this.state.myCoupons}
             setCoupon2Redeem={this.setCoupon2Redeem}
           />
         </div>
@@ -321,6 +339,40 @@ class CouponSelector extends React.Component {
       <div class="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1">
         {couponItems}
       </div>
+    )
+  }
+}
+
+class AccountSelector extends React.Component {
+  render() {
+    // let accounts = this.props.accounts.map(a => {
+    //   return <option value={a}>{a}</option>
+    // })
+    return (
+      <Form>
+        <Form.Row className="align-items-center">
+          <Col xs="auto">
+            <Form.Label htmlFor="account">
+              Account
+            </Form.Label>
+          </Col>
+          <Col xs="auto">
+            <Form.Control
+              as="select"
+              className="mr-sm-2"
+              id="account"
+              custom
+              value={this.props.defaultAccount}
+              onChange={(e) => this.props.switchAccount(e.target.value)}
+            >
+              {/* <option value="0">Choose...</option> */}
+              {/* {accounts} */}
+              <option value={this.props.accounts[0]}>{this.props.accounts[0]}</option>
+              <option value={this.props.accounts[1]}>{this.props.accounts[1]}</option>
+            </Form.Control>
+          </Col>
+        </Form.Row>
+      </Form>
     )
   }
 }

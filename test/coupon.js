@@ -69,4 +69,16 @@ contract("1st Coupon test", async accounts => {
         let tokenId = myCoupons[0].tokenId
         await expectRevert(instance.redeem(tokenId, { from: accounts[0] }), "Not Owner")
     })
+
+    it("account[0] transfers one of her coupons to account[1]", async () => {
+        let instance = await Coupon.deployed()
+
+        let myCoupons = await instance.getMyCoupons({ from: accounts[0] })
+        let tokenToBeTransferred = myCoupons[0].tokenId
+        console.log(`transfer token ${tokenToBeTransferred} from ${accounts[0]} to ${accounts[1]}}`)
+        await instance.safeTransferFrom(accounts[0], accounts[1], tokenToBeTransferred)
+
+        assert(instance.ownerOf(tokenToBeTransferred), accounts[1])
+    })
+
 });
