@@ -142,7 +142,7 @@ class App extends React.Component {
   setCoupon2Transfer = (tokenId) => {
     let accounts = this.state.accounts.filter(account => account !== this.state.myAccount)
     let transferAccounts = accounts.map(a => {
-      return <option value={a}>{a}</option>
+      return <option key={a} value={a}>{a}</option>
     })
     console.log(`transferAccount: ${transferAccounts}`)
     this.setState({ transferAccounts: transferAccounts, tokenId2Transfer: tokenId }, () => {
@@ -307,9 +307,9 @@ class App extends React.Component {
                 className="mr-sm-2"
                 id="account"
                 custom
-                onChange={(e) => this.setTransferAccount(e.target.value)}
+                onChange={(e) => e.target.value !== "0" && this.setTransferAccount(e.target.value)}
               >
-                <option value="null">Choose...</option>
+                <option key="0" value="null">Choose...</option>
                 {this.state.transferAccounts}
               </Form.Control>
             </Modal.Body >
@@ -471,9 +471,9 @@ class CouponSelector extends React.Component {
 
 class AccountSelector extends React.Component {
   render() {
-    // let accounts = this.props.accounts.map(a => {
-    //   return <option value={a}>{a}</option>
-    // })
+    let accounts = this.props.accounts.map(a => {
+      return <option key={a} value={a}>{a}</option>
+    })
     return (
       <Form>
         <Form.Row className="align-items-center">
@@ -489,12 +489,12 @@ class AccountSelector extends React.Component {
               id="account"
               custom
               value={this.props.defaultAccount}
-              onChange={(e) => this.props.switchAccount(e.target.value)}
+              onChange={(e) => e.target.value !== "0" && this.props.switchAccount(e.target.value)}
             >
-              {/* <option value="0">Choose...</option> */}
-              {/* {accounts} */}
-              <option value={this.props.accounts[0]}>{this.props.accounts[0]}</option>
-              <option value={this.props.accounts[1]}>{this.props.accounts[1]}</option>
+              <option key="0" value="0">Choose...</option>
+              {accounts}
+              {/* <option value={this.props.accounts[0]}>{this.props.accounts[0]}</option>
+              <option value={this.props.accounts[1]}>{this.props.accounts[1]}</option> */}
             </Form.Control>
           </Col>
         </Form.Row>
