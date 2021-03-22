@@ -100,7 +100,6 @@ class App extends React.Component {
   }
 
   switchAccount = (account) => {
-    // alert(`switchAccount(${account})`)
     this.setState({ myAccount: account }, () => {
       this.updateMyCoupons()
       this.updateEventHistory()
@@ -145,7 +144,10 @@ class App extends React.Component {
       return <option key={a} value={a}>{a}</option>
     })
     console.log(`transferAccount: ${transferAccounts}`)
-    this.setState({ transferAccounts: transferAccounts, tokenId2Transfer: tokenId }, () => {
+    this.setState({
+      transferAccounts: transferAccounts,
+      tokenId2Transfer: tokenId
+    }, () => {
       this.displayTransferModal()
     })
   }
@@ -263,7 +265,7 @@ class App extends React.Component {
           <ContractAddress contractInstance={this.state.couponInstance} />
         </div>
 
-        <div className="d-flex flex-row justify-content-center">
+        <div className="d-flex flex-row justify-content-center mt-3">
           <AccountSelector accounts={this.state.accounts} switchAccount={this.switchAccount} defaultAccount={this.state.myAccount} />
         </div>
 
@@ -309,7 +311,7 @@ class App extends React.Component {
                 custom
                 onChange={(e) => e.target.value !== "0" && this.setTransferAccount(e.target.value)}
               >
-                <option key="0" value="null">Choose...</option>
+                <option key="0" value="0">Choose...</option>
                 {this.state.transferAccounts}
               </Form.Control>
             </Modal.Body >
@@ -476,11 +478,9 @@ class AccountSelector extends React.Component {
     })
     return (
       <Form>
-        <Form.Row className="align-items-center">
+        <Form.Row>
           <Col xs="auto">
-            <Form.Label htmlFor="account">
-              Account
-            </Form.Label>
+            <Form.Label>Account</Form.Label>
           </Col>
           <Col xs="auto">
             <Form.Control
