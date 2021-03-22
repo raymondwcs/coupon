@@ -1,16 +1,9 @@
 import React from 'react';
 // import ReactDOM from 'react-dom';
+import { Button, ButtonGroup, ButtonToolbar, Modal, Table, Card, Container, Col, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import Table from 'react-bootstrap/Table';
-import Card from 'react-bootstrap/Card';
-import Container from 'react-bootstrap/Container';
 import getWeb3 from "./getWeb3";
-
 import CouponContract from "./build/contracts/Coupon.json";
-import { Form } from 'react-bootstrap';
-import { Col } from 'react-bootstrap';
 
 class App extends React.Component {
   constructor(props) {
@@ -18,6 +11,7 @@ class App extends React.Component {
 
     this.state = {
       showRedeemModal: false,     // controls the display of redeem modal
+      showTransferModal: false,   // controls the display of transfer modal
       coupon2RedeemMessage: {},   // message to be displayed in the redeem modal
       nCoupons: 0,                // number of unredeemed coupon
       web3: null,
@@ -44,11 +38,11 @@ class App extends React.Component {
         return this.updateMyCoupons()       // returns a copy of my coupons
       })
       .then(myCoupons => {
-        console.log(`myCoupons: ${myCoupons}`)
+        console.log(`myCoupons: ${JSON.stringify(myCoupons)}`)
         return this.updateEventHistory()    // returns evnet history
       })
       .then(eventHistory => {
-        console.log(`eventHistory: ${eventHistory}`)
+        console.log(`eventHistory: ${JSON.stringify(eventHistory)}`)
       })
       .catch((error) => {
         console.log(error)
@@ -114,12 +108,20 @@ class App extends React.Component {
     console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
   }
 
-  dismissModal = () => {
+  dismissRedeemModal = () => {
     this.setState({ showRedeemModal: false })
   }
 
-  displayModal = () => {
+  displayRedeemModal = () => {
     this.setState({ showRedeemModal: true })
+  }
+
+  dismissTransferModal = () => {
+    this.setState({ showTransferModal: false })
+  }
+
+  displayTransferModal = () => {
+    this.setState({ showTransferModal: true })
   }
 
   setCoupon2Redeem = (tokenId) => {
@@ -132,13 +134,42 @@ class App extends React.Component {
         coupon2RedeemMessage.expiryDate = c.expiryDate
         coupon2RedeemMessage.description = c.description
         this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
-        this.displayModal()
+        this.displayRedeemModal()
       }
     }
   }
 
+  setCoupon2Transfer = (tokenId) => {
+    let accounts = this.state.accounts.filter(account => account !== this.state.myAccount)
+    let transferAccounts = accounts.map(a => {
+      return <option value={a}>{a}</option>
+    })
+    console.log(`transferAccount: ${transferAccounts}`)
+    this.setState({ transferAccounts: transferAccounts, tokenId2Transfer: tokenId }, () => {
+      this.displayTransferModal()
+    })
+  }
+
+  setTransferAccount = (account) => {
+    this.setState({ transferAccount: account })
+  }
+
+  transfer = async () => {
+    this.dismissTransferModal()
+    if (this.state.tokenId2Transfer && this.state.transferAccount) {
+      await this.state.couponInstance.safeTransferFrom(
+        this.state.myAccount, this.state.transferAccount, this.state.tokenId2Transfer,
+        { from: this.state.myAccount }
+      )
+      this.updateMyCoupons()
+      this.updateEventHistory()
+      alert(`Coupon [${this.state.tokenId2Transfer}] transferred to ${this.state.transferAccount}`)
+      this.setState({ transferAccount: undefined, tokenId2Transfer: undefined })
+    }
+  }
+
   redeem = async () => {
-    this.dismissModal()
+    this.dismissRedeemModal()
     if (this.state.coupon2RedeemMessage) {
       let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
@@ -162,20 +193,58 @@ class App extends React.Component {
     }
   }
 
+  // updateEventHistory = async () => {
+  //   this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' }).then(events => {
+  //     console.log(JSON.stringify(events))
+  //     let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
+  //     let history = filteredEvents.map(e => {
+  //       return ({
+  //         transactionHash: e.transactionHash,
+  //         tokenId: e.returnValues.tokenId,
+  //         blockTimeStamp: e.returnValues.blockTimeStamp
+  //       })
+  //     })
+  //     this.setState({ eventHistory: history })
+  //     return history
+  //   })
+  // }
+
   updateEventHistory = async () => {
-    this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' }).then(events => {
-      console.log(JSON.stringify(events))
-      let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
-      let history = filteredEvents.map(e => {
-        return ({
-          transactionHash: e.transactionHash,
-          tokenId: e.returnValues.tokenId,
-          blockTimeStamp: e.returnValues.blockTimeStamp
-        })
+    let events = await this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' })
+    let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
+    let filteredRedeemEvents = filteredEvents.map(e => {
+      return ({
+        event: 'redeem',
+        tokenId: e.returnValues.tokenId,
+        blockTimeStamp: e.returnValues.blockTimeStamp,
+        transactionHash: e.transactionHash,
+        remarks: ""
       })
-      this.setState({ eventHistory: history })
-      return history
     })
+
+    events = await this.state.couponInstance.getPastEvents('Transfer', { fromBlock: 0, toBlock: 'latest' })
+    // console.log(`Transfer events: ${JSON.stringify(events)}`)
+    filteredEvents = events.filter(e => e.returnValues.from === this.state.myAccount)
+    let filteredTransferEvents = []
+    for (let e of filteredEvents) {
+      let results = await this.state.web3.eth.getTransaction(e.transactionHash)
+      let blockNumber = results.blockNumber
+      results = await this.state.web3.eth.getBlock(blockNumber)
+      let timestamp = results.timestamp
+      let eventObject = {}
+      eventObject.event = 'transfer'
+      eventObject.tokenId = e.returnValues.tokenId
+      eventObject.remarks = `Transferred to ${e.returnValues.to}`
+      eventObject.blockTimeStamp = timestamp
+      eventObject.transactionHash = e.transactionHash
+      filteredTransferEvents.push(eventObject)
+    }
+
+    console.log(`filteredTransferEvents: ${JSON.stringify(filteredTransferEvents)}`)
+
+    let history = [...filteredRedeemEvents, ...filteredTransferEvents]
+    this.setState({ eventHistory: history })
+    return history
   }
 
   render() {
@@ -206,7 +275,7 @@ class App extends React.Component {
         </div>
 
         <div className="d-flex flex-row justify-content-center" >
-          <Modal show={this.state.showRedeemModal} onHide={this.dismissModal}>
+          <Modal show={this.state.showRedeemModal} onHide={this.dismissRedeemModal}>
             <Modal.Header closeButton>
               <Modal.Title>Redeem this Coupon?</Modal.Title>
             </Modal.Header>
@@ -223,8 +292,34 @@ class App extends React.Component {
             </Modal.Body >
 
             <Modal.Footer>
-              <Button variant="secondary" onClick={this.dismissModal}>Cancel</Button>
+              <Button variant="secondary" onClick={this.dismissRedeemModal}>Cancel</Button>
               <Button variant="primary" onClick={this.redeem}>Redeem</Button>
+            </Modal.Footer>
+          </Modal >
+        </div>
+
+        <div className="d-flex flex-row justify-content-center" >
+          <Modal show={this.state.showTransferModal} onHide={this.dismissTransferModal}>
+            <Modal.Header closeButton>
+              <Modal.Title>Transfer this Coupon?</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+              <Form.Control
+                as="select"
+                className="mr-sm-2"
+                id="account"
+                custom
+                onChange={(e) => this.setTransferAccount(e.target.value)}
+              >
+                <option value="null">Choose...</option>
+                {this.state.transferAccounts}
+              </Form.Control>
+            </Modal.Body >
+
+            <Modal.Footer>
+              <Button variant="secondary" onClick={this.dismissTransferModal}>Cancel</Button>
+              <Button variant="primary" onClick={this.transfer}>Transfer</Button>
             </Modal.Footer>
           </Modal >
         </div>
@@ -234,6 +329,7 @@ class App extends React.Component {
             myAccount={this.state.myAccount}
             myCoupons={this.state.myCoupons}
             setCoupon2Redeem={this.setCoupon2Redeem}
+            setCoupon2Transfer={this.setCoupon2Transfer}
           />
         </div>
 
@@ -256,21 +352,23 @@ class EventHistory extends React.Component {
     // return <ol>{listItems}</ol>
     let listItems = this.props.events.map((e) =>
       <tr key={e.transactionHash}>
+        <td>{e.event}</td>
         <td>{e.tokenId}</td>
-        <td>{e.transactionHash}</td>
         <td>{new Date(e.blockTimeStamp * 1000).toLocaleString()}</td>
+        <td>{e.remarks}</td>
       </tr>
     )
     return (
       <div >
-        <div className="d-flex justify-content-center">Redeem History</div>
+        <div className="d-flex justify-content-center">Transaction History</div>
         <div className="d-flex justify-content-center">
           <Table striped bordered hover size="sm">
             <thead>
               <tr>
-                <th className="col-auto">Coupon No.</th>
-                <th className="col-auto">Tx Hash</th>
+                <th className="col-auto">Event</th>
+                <th className="col-auto">Coupon</th>
                 <th className="col-auto">Date/Time</th>
+                <th className="col-auto">Remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -332,11 +430,22 @@ class CouponSelector extends React.Component {
                     <Card.Text>
                       Expiry Date: {c.expiryDate}
                     </Card.Text>
-                    <Button className variant="primary" disabled={c.redeemed} onClick={
-                      (event) => {
-                        this.props.setCoupon2Redeem(c.tokenId)
-                      }}>Redeem
-                    </Button>
+                    <ButtonToolbar>
+                      <ButtonGroup className="mr-2">
+                        <Button className variant="primary" disabled={c.redeemed} onClick={
+                          (event) => {
+                            this.props.setCoupon2Redeem(c.tokenId)
+                          }}>Redeem
+                      </Button>
+                      </ButtonGroup>
+                      <ButtonGroup className="mr-2">
+                        <Button className variant="primary" disabled={c.redeemed} onClick={
+                          (event) => {
+                            this.props.setCoupon2Transfer(c.tokenId)
+                          }}>Transfer
+                      </Button>
+                      </ButtonGroup>
+                    </ButtonToolbar>
                   </div>
               }
             </div>
@@ -351,8 +460,8 @@ class CouponSelector extends React.Component {
               </svg>
             </div>
           </Card.Footer>
-        </Card>
-      </div>
+        </Card >
+      </div >
 
     )
     return (
