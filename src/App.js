@@ -193,23 +193,8 @@ class App extends React.Component {
     }
   }
 
-  // updateEventHistory = async () => {
-  //   this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' }).then(events => {
-  //     console.log(JSON.stringify(events))
-  //     let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
-  //     let history = filteredEvents.map(e => {
-  //       return ({
-  //         transactionHash: e.transactionHash,
-  //         tokenId: e.returnValues.tokenId,
-  //         blockTimeStamp: e.returnValues.blockTimeStamp
-  //       })
-  //     })
-  //     this.setState({ eventHistory: history })
-  //     return history
-  //   })
-  // }
-
   updateEventHistory = async () => {
+    // redeem events
     let events = await this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' })
     let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
     let filteredRedeemEvents = filteredEvents.map(e => {
@@ -222,9 +207,16 @@ class App extends React.Component {
       })
     })
 
+    // transfer events
     events = await this.state.couponInstance.getPastEvents('Transfer', { fromBlock: 0, toBlock: 'latest' })
-    // console.log(`Transfer events: ${JSON.stringify(events)}`)
-    filteredEvents = events.filter(e => e.returnValues.from === this.state.myAccount)
+    filteredEvents = events.filter(e => {
+      return (
+        (e.returnValues.from !== "0x0000000000000000000000000000000000000000") &&
+        ((e.returnValues.from === this.state.myAccount) ||
+          (e.returnValues.to === this.state.myAccount)
+        )
+      )
+    })
     let filteredTransferEvents = []
     for (let e of filteredEvents) {
       let results = await this.state.web3.eth.getTransaction(e.transactionHash)
@@ -234,7 +226,12 @@ class App extends React.Component {
       let eventObject = {}
       eventObject.event = 'transfer'
       eventObject.tokenId = e.returnValues.tokenId
-      eventObject.remarks = `Transferred to ${e.returnValues.to}`
+      eventObject.remarks =
+        (e.returnValues.from === this.state.myAccount)
+          ?
+          `To: ${e.returnValues.to}`
+          :
+          `From: ${e.returnValues.from}`
       eventObject.blockTimeStamp = timestamp
       eventObject.transactionHash = e.transactionHash
       filteredTransferEvents.push(eventObject)
