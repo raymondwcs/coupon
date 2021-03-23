@@ -44,7 +44,7 @@ const getNetwork = (web3) => {
     return new Promise(async (resolve, reject) => {
         let network = {}
         network['id'] = await web3.eth.net.getId()
-        network['name'] = await web3.eth.net.getNetworkType()
+        network['networkType'] = await web3.eth.net.getNetworkType()
         // console.log(`network: ${JSON.stringify(network)}`)
 
         return resolve(network)
