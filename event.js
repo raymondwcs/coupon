@@ -29,6 +29,10 @@ module.exports = async function main(callback) {
                 // console.log(`getTransactionFromBlock(${block},${i}): ${JSON.stringify(tx)}`)
                 let txReceipt = await web3.eth.getTransactionReceipt(tx.hash)
                 // console.log(txReceipt)
+                if (txReceipt.logs.length == 0) {
+                    console.log(`getTransactionReceipt(${tx.hash}).logs is empty!\ntxReceipt:`)
+                    console.log(txReceipt)
+                }
                 for (log of txReceipt.logs) {
                     for (f of Contract.abi) {
                         if (log.topics[0] === f.signature) {  // match `topics' against abi
