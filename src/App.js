@@ -201,8 +201,8 @@ class App extends React.Component {
     this.setState({ myAccount: account }, () => {
       this.updateMyCoupons()
       this.updateEventHistory()
+      console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
     })
-    console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
   }
 
   dismissRedeemModal = () => {
