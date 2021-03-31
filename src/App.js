@@ -330,7 +330,7 @@ class App extends React.Component {
     let history = [...filteredRedeemEvents, ...filteredTransferEvents]
     return history
   }
-}
+}  // end of App
 
 const EventHistory = (props) => {
   if (props.events.length === 0) {
