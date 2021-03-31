@@ -336,7 +336,7 @@ class App extends React.Component {
 // function components
 //
 const EventHistory = (props) => {
-  if (props.events === null || props.events === undefined) {
+  if (props.events === null || props.events === undefined || props.events.length === 0) {
     return < div ></div >
   }
   // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
