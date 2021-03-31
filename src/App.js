@@ -273,18 +273,6 @@ class App extends React.Component {
     if (this.state.coupon2RedeemMessage) {
       let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-      /*
-      let updatedCoupons = [...this.state.myCoupons]    // make a copy of myCoupons
-      let coupon2Update = updatedCoupons[tokenId - 1]   // make a copy of the coupon to be redeemed from myCoupons
-      coupon2Update.redeemed = true
-      coupon2Update.redeemedTimeStamp = new Date().getTime() / 1000
-      updatedCoupons[tokenId - 1] = coupon2Update
-      this.setState({ myCoupons: updatedCoupons })      // replace/update myCoupons in state
-
-      this.setState({ nCoupons: this.nCoupons() })
-      this.updateEventHistory()
-      this.setState({ coupon2RedeemMessage: undefined })
-      */
       this.updateMyCoupons()
       this.updateEventHistory()
       this.setState({ coupon2RedeemMessage: undefined })

@@ -1,53 +1,57 @@
 import Web3 from 'web3'
-// This function detects most providers injected at window.ethereum
 import detectEthereumProvider from '@metamask/detect-provider'
-import HDWalletProvider from '@truffle/hdwallet-provider'
-// const HDWalletProvider = require("@truffle/hdwallet-provider")
 
-let web3 = null
-let getWeb3 = new Promise(async (resolve, reject) => {
-    const provider = await detectEthereumProvider()
-    // From now on, this should always be true:
-    // provider === window.ethereum
-    if (provider) {
-        console.log('Injected web3 detected.');
-        web3 = new Web3(provider)
-    } else {
-        console.log(`No web3 instance injected, using ${process.env.REACT_APP_API_URL} defined in .env`)
-        require('dotenv').config({ path: "../.env" })
-        if (process.env.REACT_APP_MNEMONIC && process.env.REACT_APP_API_URL) {
-            let customeProvider = new HDWalletProvider({
-                mnemonic: {
-                    phrase: process.env.REACT_APP_MNEMONIC
-                },
-                providerOrUrl: process.env.REACT_APP_API_URL
-            })
-            web3 = new Web3(customeProvider)
+var web3 = null
+const getWeb3 = () => {
+    return new Promise(async (resolve, reject) => {
+        if (process.env.REACT_APP_USE_METAMASK === "true") {
+            const provider = await detectEthereumProvider()
+            // From now on, this should always be true:
+            // provider === window.ethereum
+            if (provider) {
+                console.log('Injected web3 detected.');
+                web3 = new Web3(provider)
+                try {
+                    await provider.request({ method: 'eth_requestAccounts' });
+                } catch (error) {
+                    console.error(error);
+                }
+            }
         } else {
-            return reject(new Error('getWeb3(): .env does not exist or contain the required parameters!'))
+            const Web3HttpProvider = require('web3-providers-http');
+            require('dotenv').config({ path: "../.env" })
+            const provideURL =
+                (process.env.REACT_APP_PROVIDER_URL) ? process.env.REACT_APP_PROVIDER_URL : 'http://localhost:8545'
+            const customProvider = new Web3HttpProvider(provideURL)
+            web3 = new Web3(customProvider)
         }
-    }
 
-    let accounts = await web3.eth.getAccounts()
-    let network = await getNetwork(web3)
-
-    let results = {
-        web3: web3,
-        accounts: accounts,
-        network: network
-    }
-
-    return resolve(results)
-})
+        if (web3) {
+            const accounts = await web3.eth.getAccounts()
+            const network = await getNetwork(web3)
+            const results = {
+                web3: web3,
+                accounts: accounts,
+                network: network,
+            }
+            return resolve(results)
+        } else {
+            return reject(new Error("web3 error: web3 is null!"))
+        }
+    })
+}
 
 const getNetwork = (web3) => {
     return new Promise(async (resolve, reject) => {
-        let network = {}
-        network['id'] = await web3.eth.net.getId()
-        network['networkType'] = await web3.eth.net.getNetworkType()
-        // console.log(`network: ${JSON.stringify(network)}`)
-
-        return resolve(network)
+        try {
+            let network = {}
+            network['id'] = await web3.eth.net.getId()
+            network['networkType'] = await web3.eth.net.getNetworkType()
+            return resolve(network)
+        } catch (error) {
+            return reject(new Error(error))
+        }
     })
 }
+
 export default getWeb3
