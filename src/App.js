@@ -17,36 +17,34 @@ class App extends React.Component {
       web3: null,
       eventHistory: [],           // awardCouponEvent events
       myCoupons: [],              // copy of coupons (obtainde from the network)
-      myAccount: null             // accounts[]
+      myAccount: null
     }
   }
 
   componentDidMount() {
     // Get network provider and web3 instance.
-    getWeb3
-      .then(results => {
-        this.setState({
-          web3: results.web3,
-          accounts: results.accounts,
-          network: results.network,
-        })
-        // Instantiate contract once web3 provided.
-        return this.instantiateContract()   // returns contract instance
+    getWeb3().then(results => {
+      this.setState({
+        web3: results.web3,
+        accounts: results.accounts,
+        network: results.network,
       })
-      .then(instance => {
-        return this.updateMyCoupons()       // returns a copy of my coupons
-      })
-      .then(myCoupons => {
-        console.log(`myCoupons: ${JSON.stringify(myCoupons)}`)
-        return this.updateEventHistory()    // returns evnet history
-      })
-      .then(eventHistory => {
-        console.log(`eventHistory: ${JSON.stringify(eventHistory)}`)
-      })
-      .catch((error) => {
-        console.log(error)
-        alert(error.message)
-      })
+      return this.instantiateContract()   // returns contract instance
+    }).then(instance => {
+      this.setState({ couponInstance: instance })
+      return this.updateMyCoupons()       // returns a copy of my coupons
+    }).then(myCoupons => {
+      console.log(`myCoupons: ${JSON.stringify(myCoupons)}`)
+      this.setState({ myCoupons: myCoupons })
+      this.setState({ nCoupons: this.nCoupons() })
+      return this.updateEventHistory()    // returns evnet history
+    }).then(eventHistory => {
+      console.log(`eventHistory: ${JSON.stringify(eventHistory)}`)
+      this.setState({ eventHistory: eventHistory })
+    }).catch((error) => {
+      console.log(error)
+      alert(error.message)
+    })
   }
 
   instantiateContract = async () => {
@@ -59,12 +57,8 @@ class App extends React.Component {
     console.log(`myAccount: ${this.state.myAccount}`)
 
     let instance = await coupon.deployed()
-    this.setState({ couponInstance: instance })
 
     return instance
-    // let totalSupply = await instance.totalSupply()
-    // let nCoupons = await instance.balanceOf(this.state.myAccount)
-    // this.setState({ nCoupons: nCoupons.toNumber() })
   }
 
   render() {
@@ -181,10 +175,7 @@ class App extends React.Component {
       return coupon
     })
     console.log(`myCoupons: ${myCoupons}`)
-    this.setState({ myCoupons: myCoupons })
-
     console.log(`nCoupons: ${this.nCoupons()}`)
-    this.setState({ nCoupons: this.nCoupons() })
 
     return myCoupons
   }
@@ -199,8 +190,11 @@ class App extends React.Component {
 
   switchAccount = (account) => {
     this.setState({ myAccount: account }, () => {
-      this.updateMyCoupons()
-      this.updateEventHistory()
+      this.updateMyCoupons().then(myCoupons => {
+        this.setState({ myCoupons: myCoupons })
+        this.setState({ nCoupons: this.nCoupons() })
+      })
+      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
       console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
     })
   }
@@ -261,8 +255,11 @@ class App extends React.Component {
         this.state.myAccount, this.state.transferAccount, this.state.tokenId2Transfer,
         { from: this.state.myAccount }
       )
-      this.updateMyCoupons()
-      this.updateEventHistory()
+      this.updateMyCoupons().then(myCoupons => {
+        this.setState({ myCoupons: myCoupons })
+        this.setState({ nCoupons: this.nCoupons() })
+      })
+      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
       alert(`Coupon [${this.state.tokenId2Transfer}] transferred to ${this.state.transferAccount}`)
       this.setState({ transferAccount: undefined, tokenId2Transfer: undefined })
     }
@@ -273,8 +270,11 @@ class App extends React.Component {
     if (this.state.coupon2RedeemMessage) {
       let tokenId = this.state.coupon2RedeemMessage.tokenId
       let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-      this.updateMyCoupons()
-      this.updateEventHistory()
+      this.updateMyCoupons().then(myCoupons => {
+        this.setState({ myCoupons: myCoupons })
+        this.setState({ nCoupons: this.nCoupons() })
+      })
+      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
       this.setState({ coupon2RedeemMessage: undefined })
 
       alert(`Succesfully Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
@@ -328,7 +328,6 @@ class App extends React.Component {
     console.log(`filteredTransferEvents: ${JSON.stringify(filteredTransferEvents)}`)
 
     let history = [...filteredRedeemEvents, ...filteredTransferEvents]
-    this.setState({ eventHistory: history })
     return history
   }
 }
