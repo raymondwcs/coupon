@@ -332,8 +332,11 @@ class App extends React.Component {
   }
 }  // end of App
 
+//
+// function components
+//
 const EventHistory = (props) => {
-  if (props.events.length === 0) {
+  if (props.events === null || props.events === undefined) {
     return < div ></div >
   }
   // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
@@ -370,26 +373,33 @@ const EventHistory = (props) => {
 
 const Provider = (props) => {
   return (
-    <div className="d-flex justify-content-center">
-      <small>Connected to network: <code className="text-info">{props.networkType} (Id: {props.Id})</code></small>
-    </div >
+    (props.network === undefined || props.network === null)
+      ?
+      <div></div>
+      :
+      <div className="d-flex justify-content-center">
+        <small>Connected to network: <code className="text-info">{props.networkType} (Id: {props.Id})</code></small>
+      </div >
   )
 }
 
 const ContractAddress = (props) => {
   return (
-    (props.contractInstance !== undefined) ?
+    (props.contractInstance === undefined || props.contractInstance === null) ?
       <div className="d-flex justify-content-center">
-        <small>Contract address: <code className="text-info">{props.contractInstance.address}</code></small>
+        <small className="text-danger">Contract not deployed??</small>
       </div>
       :
       <div className="d-flex justify-content-center">
-        <small className="text-danger">Contract not deployed??</small>
+        <small>Contract address: <code className="text-info">{props.contractInstance.address}</code></small>
       </div>
   )
 }
 
 const CouponSelector = (props) => {
+  if (!props.myCoupons || props.myCoupons === undefined || props.myCoupons === null) {
+    return <div></div>
+  }
   let couponItems = props.myCoupons.map(c =>
     <div key={c.tokenId} className="d-flex col justify-content-center align-items-stretch mt-3">
       <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
@@ -453,6 +463,9 @@ const CouponSelector = (props) => {
 }
 
 const AccountSelector = (props) => {
+  if (!props.accounts || props.accounts === undefined || props.accounts === null) {
+    return <div></div>
+  }
   let accounts = props.accounts.map(a => {
     return <option key={a} value={a}>{a}</option>
   })
