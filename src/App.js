@@ -69,7 +69,7 @@ const App = () => {
       })
       console.log(`useEffect() - myCoupons, nCoupons`)
     }
-  }, [refreshMyCoupons])
+  }, [refreshMyCoupons, myAccount, couponInstance])
 
   React.useEffect(() => {
     if (couponInstance) {
@@ -126,7 +126,7 @@ const App = () => {
       })
       console.log(`useEffect() - eventHistory`)
     }
-  }, [refreshEventHistory])
+  }, [refreshEventHistory, myAccount, couponInstance, web3])
 
   const compareTimeStamp = (a, b) => {
     let eventA = a.blockTimeStamp
@@ -143,8 +143,6 @@ const App = () => {
 
   const switchAccount = (account) => {
     setMyAccount(account)
-    setRefreshEventHistory(refreshEventHistory ? false : true)
-    setRefreshMyCoupons(refreshMyCoupons ? false : true)
   }
 
   const dismissRedeemModal = () => {
@@ -195,8 +193,8 @@ const App = () => {
       await couponInstance.safeTransferFrom(
         myAccount, transferAccount, tokenId2Transfer, { from: myAccount }
       )
-      setRefreshEventHistory(refreshEventHistory ? false : true)
-      setRefreshMyCoupons(refreshMyCoupons ? false : true)
+      setRefreshEventHistory(!refreshEventHistory)
+      setRefreshMyCoupons(!refreshMyCoupons)
       setTokenId2Transfer(undefined)
       alert(`Coupon [${tokenId2Transfer}] transferred to ${transferAccount}`)
     }
@@ -207,8 +205,8 @@ const App = () => {
     if (coupon2RedeemMessage) {
       let tokenId = coupon2RedeemMessage.tokenId
       let results = await couponInstance.redeem(tokenId, { from: myAccount })
-      setRefreshEventHistory(refreshEventHistory ? false : true)
-      setRefreshMyCoupons(refreshMyCoupons ? false : true)
+      setRefreshEventHistory(!refreshEventHistory)
+      setRefreshMyCoupons(!refreshMyCoupons)
       setCoupon2RedeemMessage(undefined)
       alert(`Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
     }
@@ -330,7 +328,7 @@ const EventHistory = (props) => {
   }
   // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
   // return <ol>{listItems}</ol>
-  let listItems = props.events.map((e) =>
+  var listItems = props.events.map((e) =>
     <tr key={e.transactionHash}>
       <td>{e.event}</td>
       <td>{e.tokenId}</td>
@@ -339,23 +337,30 @@ const EventHistory = (props) => {
     </tr>
   )
   return (
-    <div >
-      <div className="d-flex justify-content-center">Transaction History</div>
-      <div className="d-flex justify-content-center">
-        <Table striped bordered hover size="sm">
-          <thead>
-            <tr>
-              <th className="col-auto">Event</th>
-              <th className="col-auto">Coupon</th>
-              <th className="col-auto">Date/Time</th>
-              <th className="col-auto">Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            {listItems}
-          </tbody>
-        </Table>
-      </div>
+    <div>
+      {
+        (listItems.length > 0) ?
+          <div>
+            <div className="d-flex justify-content-center">Transaction History</div>
+            <div className="d-flex justify-content-center">
+              <Table striped bordered hover size="sm">
+                <thead>
+                  <tr>
+                    <th className="col-auto">Event</th>
+                    <th className="col-auto">Coupon</th>
+                    <th className="col-auto">Date/Time</th>
+                    <th className="col-auto">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listItems}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+          :
+          <div></div>
+      }
     </div>
   )
 }
@@ -390,64 +395,64 @@ const CouponSelector = (props) => {
     return <div></div>
   }
   let couponItems = props.myCoupons.map(c =>
-    <div key={c.tokenId} className="d-flex col justify-content-center align-items-stretch mt-3">
-      <Card style={{ width: '18rem' }} bg={c.redeemed ? "light" : "black"}>
-        <Card.Header as="h6">No. {c.tokenId}</Card.Header>
-        <Card.Body>
-          <Card.Title>${c.value}</Card.Title>
-          <Card.Subtitle>
-            {c.description}
-          </Card.Subtitle>
-          <div className="d-flex">
-            {
-              c.redeemed ?
+    <Card style={{ width: "18rem" }} bg={c.redeemed ? "light" : "black"}>
+      <Card.Header as="h6">No. {c.tokenId}</Card.Header>
+      <Card.Body>
+        <Card.Title>${c.value}</Card.Title>
+        <Card.Subtitle>
+          {c.description}
+        </Card.Subtitle>
+        <div className="d-flex">
+          {
+            c.redeemed ?
+              <Card.Text>
+                <span className="text-success font-weight-bold">Redemmed</span><br></br>
+                <small>{new Date(c.redeemedTimeStamp * 1000).toLocaleString()}</small>
+              </Card.Text>
+              :
+              <div>
                 <Card.Text>
-                  <span className="text-success font-weight-bold">Redemmed</span><br></br>
-                  <small>{new Date(c.redeemedTimeStamp * 1000).toLocaleString()}</small>
+                  Expiry Date: {c.expiryDate}
                 </Card.Text>
-                :
-                <div>
-                  <Card.Text>
-                    Expiry Date: {c.expiryDate}
-                  </Card.Text>
-                  <ButtonToolbar>
-                    <ButtonGroup className="mr-2">
-                      <Button className variant="primary" disabled={c.redeemed} onClick={
-                        (event) => {
-                          props.setCoupon2Redeem(c.tokenId)
-                        }}>Redeem
+                <ButtonToolbar>
+                  <ButtonGroup className="mr-2">
+                    <Button className variant="primary" disabled={c.redeemed} onClick={
+                      (event) => {
+                        props.setCoupon2Redeem(c.tokenId)
+                      }}>Redeem
                       </Button>
-                    </ButtonGroup>
-                    <ButtonGroup className="mr-2">
-                      <Button className variant="primary" disabled={c.redeemed} onClick={
-                        (event) => {
-                          props.setCoupon2Transfer(c.tokenId)
-                        }}>Transfer
+                  </ButtonGroup>
+                  <ButtonGroup className="mr-2">
+                    <Button className variant="primary" disabled={c.redeemed} onClick={
+                      (event) => {
+                        props.setCoupon2Transfer(c.tokenId)
+                      }}>Transfer
                       </Button>
-                    </ButtonGroup>
-                  </ButtonToolbar>
-                </div>
-            }
-          </div>
-        </Card.Body>
-        <Card.Footer className="bg-transparent">
-          <div className="d-flex flex-row-reverse align-self-end mb-2 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-info-circle" viewBox="0 0 16 16"
-              onClick={(e) => { alert(c.tokenURI) }}
-              style={{ cursor: "pointer" }}>
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-              <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-            </svg>
-          </div>
-        </Card.Footer>
-      </Card >
-    </div >
-
+                  </ButtonGroup>
+                </ButtonToolbar>
+              </div>
+          }
+        </div>
+      </Card.Body>
+      <Card.Footer className="bg-transparent">
+        <div className="d-flex flex-row-reverse align-self-end mb-2 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-info-circle" viewBox="0 0 16 16"
+            onClick={(e) => { alert(c.tokenURI) }}
+            style={{ cursor: "pointer" }}>
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+            <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+          </svg>
+        </div>
+      </Card.Footer>
+    </Card >
   )
   return (
-    <div className="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1">
+    <Container className="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1 align-items-stretch justify-content-center">
       {couponItems}
-    </div>
+    </Container>
+    // <Container className="d-flex flex-wrap align-items-stretch justify-content-center">
+    //   {couponItems}
+    // </Container>
   )
 }
 
