@@ -5,218 +5,166 @@ import 'bootstrap/dist/css/bootstrap.css';
 import getWeb3 from "./getWeb3";
 import CouponContract from "./build/contracts/Coupon.json";
 
-class App extends React.Component {
-  constructor(props) {
-    super(props)
+const App = () => {
+  const [showRedeemModal, setShowRedeemModal] = React.useState(false)
+  const [showTransferModal, setShowTransferModal] = React.useState(false)
+  const [coupon2RedeemMessage, setCoupon2RedeemMessage] = React.useState({})
+  const [nCoupons, setNCoupons] = React.useState(0)
+  const [web3, setWeb3] = React.useState(null)
+  const [eventHistory, setEventHistory] = React.useState([])
+  const [myCoupons, setMyCoupons] = React.useState([])
+  const [myAccount, setMyAccount] = React.useState("0x0000000000000000000000000000000000000000")
+  const [accounts, setAccounts] = React.useState([])
+  const [couponInstance, setCouponInstance] = React.useState(null)
+  const [tokenId2Transfer, setTokenId2Transfer] = React.useState(0)
+  const [transferAccount, setTransferAccount] = React.useState("0x0000000000000000000000000000000000000000")
+  const [transferAccountList, setTransferAccountList] = React.useState([])
+  const [network, setNetwork] = React.useState(null)
+  const [refreshMyCoupons, setRefreshMyCoupons] = React.useState(false)
+  const [refreshEventHistory, setRefreshEventHistory] = React.useState(false)
 
-    this.state = {
-      showRedeemModal: false,     // controls the display of redeem modal
-      showTransferModal: false,   // controls the display of transfer modal
-      coupon2RedeemMessage: {},   // message to be displayed in the redeem modal
-      nCoupons: 0,                // number of unredeemed coupon
-      web3: null,
-      eventHistory: [],           // awardCouponEvent events
-      myCoupons: [],              // copy of coupons (obtainde from the network)
-      myAccount: null
-    }
-  }
-
-  componentDidMount() {
-    // Get network provider and web3 instance.
+  React.useEffect(() => {
     getWeb3().then(results => {
-      this.setState({
-        web3: results.web3,
-        accounts: results.accounts,
-        network: results.network,
-      })
-      return this.instantiateContract()   // returns contract instance
+      setWeb3(results.web3)
+      setAccounts(results.accounts)
+      setNetwork(results.network)
+      return results
+    }).then(results => {
+      setMyAccount(results.accounts[0])
+      return results
+    }).then(results => {
+      const contract = require('@truffle/contract')
+      const coupon = contract(CouponContract)
+      coupon.setProvider(results.web3.currentProvider)
+      return coupon.deployed()
     }).then(instance => {
-      this.setState({ couponInstance: instance })
-      return this.updateMyCoupons()       // returns a copy of my coupons
-    }).then(myCoupons => {
-      console.log(`myCoupons: ${JSON.stringify(myCoupons)}`)
-      this.setState({ myCoupons: myCoupons })
-      this.setState({ nCoupons: this.nCoupons() })
-      return this.updateEventHistory()    // returns evnet history
-    }).then(eventHistory => {
-      console.log(`eventHistory: ${JSON.stringify(eventHistory)}`)
-      this.setState({ eventHistory: eventHistory })
-    }).catch((error) => {
-      console.log(error)
-      alert(error.message)
+      setCouponInstance(instance)
+    }).catch(error => {
+      console.error(error)
     })
-  }
+  }, [])  // this runs once
 
-  instantiateContract = async () => {
-    const contract = require('@truffle/contract')
-    const coupon = contract(CouponContract)
-    coupon.setProvider(this.state.web3.currentProvider)
-
-    let myAccount = this.state.accounts[0]
-    this.setState({ myAccount: myAccount })
-    console.log(`myAccount: ${this.state.myAccount}`)
-
-    let instance = await coupon.deployed()
-
-    return instance
-  }
-
-  render() {
-    if (!this.state.web3) {
-      return <div>Loading Web3, accounts, and contract...</div>;
-    }
-
-    return (
-      <Container>
-        <div className="d-flex flex-row justify-content-center">
-          <h1>Coupons</h1>
-        </div>
-
-        <div className="d-flex flex-row justify-content-center">
-          <Provider networkType={this.state.network.networkType} Id={this.state.network.id} />
-        </div>
-
-        <div className="d-flex flex-row justify-content-center">
-          <ContractAddress contractInstance={this.state.couponInstance} />
-        </div>
-
-        <div className="d-flex flex-row justify-content-center mt-3">
-          <AccountSelector
-            accounts={this.state.accounts}
-            switchAccount={this.switchAccount}
-            currentAccount={this.state.myAccount}
-          />
-        </div>
-
-        <div className="d-flex flex-row justify-content-center" >
-          <p>You have: <span className="h3 text-success font-weight-bolder">{this.state.nCoupons}</span> unused coupon(s)</p>
-        </div>
-
-        <div className="d-flex flex-row justify-content-center" >
-          <Modal show={this.state.showRedeemModal} onHide={this.dismissRedeemModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Redeem this Coupon?</Modal.Title>
-            </Modal.Header>
-
-            <Modal.Body>
-              <p className="h6">No. <span className="font-weight-bolder">
-                {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.tokenId}</span>
-              </p>
-              <ul>
-                <li>{(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.description}</li>
-                <li>Value: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.value}</li>
-                <li>Expiry Date: {(typeof this.state.coupon2RedeemMessage === "undefined") ? "" : this.state.coupon2RedeemMessage.expiryDate}</li>
-              </ul>
-            </Modal.Body >
-
-            <Modal.Footer>
-              <Button variant="secondary" onClick={this.dismissRedeemModal}>Cancel</Button>
-              <Button variant="primary" onClick={this.redeem}>Redeem</Button>
-            </Modal.Footer>
-          </Modal >
-        </div>
-
-        <div className="d-flex flex-row justify-content-center" >
-          <Modal show={this.state.showTransferModal} onHide={this.dismissTransferModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Transfer this Coupon?</Modal.Title>
-            </Modal.Header>
-
-            <Modal.Body>
-              <Form.Control
-                as="select"
-                className="mr-sm-2"
-                id="account"
-                custom
-                onChange={(e) => e.target.value !== "0" && this.setTransferAccount(e.target.value)}
-              >
-                <option key="0" value="0">Choose...</option>
-                {this.state.transferAccounts}
-              </Form.Control>
-            </Modal.Body >
-
-            <Modal.Footer>
-              <Button variant="secondary" onClick={this.dismissTransferModal}>Cancel</Button>
-              <Button variant="primary" onClick={this.transfer}>Transfer</Button>
-            </Modal.Footer>
-          </Modal >
-        </div>
-
-        <div className="d-flex flex-row justify-content-center" >
-          <CouponSelector
-            myAccount={this.state.myAccount}
-            myCoupons={this.state.myCoupons}
-            setCoupon2Redeem={this.setCoupon2Redeem}
-            setCoupon2Transfer={this.setCoupon2Transfer}
-          />
-        </div>
-
-        <br></br>
-        <div className="d-flex flex-row justify-content-center align-items-stretch" >
-          <EventHistory events={this.state.eventHistory} />
-        </div>
-
-      </Container >
-    );
-  }
-
-  updateMyCoupons = async () => {
-    let myCoupons = []
-    let x = await this.state.couponInstance.getMyCoupons({ from: this.state.myAccount });
-    myCoupons = x.map(c => {
-      let coupon = {}
-      coupon.tokenId = c.tokenId
-      coupon.description = c.description
-      coupon.tokenURI = c.tokenURI
-      coupon.value = c.value
-      coupon.expiryDate = c.expiryDate
-      coupon.redeemed = c.redeemed
-      coupon.redeemedTimeStamp = c.redeemedTimeStamp
-      return coupon
-    })
-    console.log(`myCoupons: ${myCoupons}`)
-    console.log(`nCoupons: ${this.nCoupons()}`)
-
-    return myCoupons
-  }
-
-  nCoupons = () => {
-    let nCoupons = 0
-    for (let c of this.state.myCoupons) {
-      if (!c.redeemed && c.tokenId !== 0) nCoupons++
-    }
-    return nCoupons
-  }
-
-  switchAccount = (account) => {
-    this.setState({ myAccount: account }, () => {
-      this.updateMyCoupons().then(myCoupons => {
-        this.setState({ myCoupons: myCoupons })
-        this.setState({ nCoupons: this.nCoupons() })
+  React.useEffect(() => {
+    if (couponInstance) {
+      couponInstance.getMyCoupons({ from: myAccount }).then(x => {
+        let myCoupons = x.map(c => {
+          let coupon = {}
+          coupon.tokenId = c.tokenId
+          coupon.description = c.description
+          coupon.tokenURI = c.tokenURI
+          coupon.value = c.value
+          coupon.expiryDate = c.expiryDate
+          coupon.redeemed = c.redeemed
+          coupon.redeemedTimeStamp = c.redeemedTimeStamp
+          return coupon
+        })
+        return myCoupons
+      }).then(myCoupons => {
+        setMyCoupons(myCoupons)
+        let n = 0
+        for (let c of myCoupons) {
+          if (!c.redeemed && c.tokenId !== 0) n++
+        }
+        setNCoupons(n)
       })
-      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
-      console.log(`switchAccount(${account}) myAccount: ${this.state.myAccount}`)
-    })
+      console.log(`useEffect() - myCoupons, nCoupons`)
+    }
+  }, [refreshMyCoupons])
+
+  React.useEffect(() => {
+    if (couponInstance) {
+      const updateEventHistory = async () => {
+        // redeem events
+        let events = await couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' })
+        let filteredEvents = events.filter(e => e.returnValues.customer === myAccount)
+        let filteredRedeemEvents = filteredEvents.map(e => {
+          return ({
+            event: 'redeem',
+            tokenId: e.returnValues.tokenId,
+            blockTimeStamp: e.returnValues.blockTimeStamp,
+            transactionHash: e.transactionHash,
+            remarks: ""
+          })
+        })
+
+        // transfer events
+        events = await couponInstance.getPastEvents('Transfer', { fromBlock: 0, toBlock: 'latest' })
+        filteredEvents = events.filter(e => {
+          return (
+            (e.returnValues.from !== "0x0000000000000000000000000000000000000000") &&
+            ((e.returnValues.from === myAccount) || (e.returnValues.to === myAccount))
+          )
+        })
+        let filteredTransferEvents = []
+        for (let e of filteredEvents) {
+          let results = await web3.eth.getTransaction(e.transactionHash)
+          let blockNumber = results.blockNumber
+          results = await web3.eth.getBlock(blockNumber)
+          let timestamp = results.timestamp
+          let eventObject = {}
+          eventObject.event = 'transfer'
+          eventObject.tokenId = e.returnValues.tokenId
+          eventObject.remarks =
+            (e.returnValues.from === myAccount)
+              ?
+              `To: ${e.returnValues.to}`
+              :
+              `From: ${e.returnValues.from}`
+          eventObject.blockTimeStamp = timestamp
+          eventObject.transactionHash = e.transactionHash
+          filteredTransferEvents.push(eventObject)
+        }
+
+        // console.log(`filteredTransferEvents: ${JSON.stringify(filteredTransferEvents)}`)
+
+        let history = [...filteredRedeemEvents, ...filteredTransferEvents]
+        return history
+      }
+      updateEventHistory().then(history => {
+        // console.log(history)
+        setEventHistory(history.sort(compareTimeStamp))
+      })
+      console.log(`useEffect() - eventHistory`)
+    }
+  }, [refreshEventHistory])
+
+  const compareTimeStamp = (a, b) => {
+    let eventA = a.blockTimeStamp
+    let eventB = b.blockTimeStamp
+
+    let comparison = 0
+    if (eventA > eventB) {
+      comparison = 1
+    } else {
+      comparison = -1
+    }
+    return comparison
   }
 
-  dismissRedeemModal = () => {
-    this.setState({ showRedeemModal: false })
+  const switchAccount = (account) => {
+    setMyAccount(account)
+    setRefreshEventHistory(refreshEventHistory ? false : true)
+    setRefreshMyCoupons(refreshMyCoupons ? false : true)
   }
 
-  displayRedeemModal = () => {
-    this.setState({ showRedeemModal: true })
+  const dismissRedeemModal = () => {
+    setShowRedeemModal(false)
   }
 
-  dismissTransferModal = () => {
-    this.setState({ showTransferModal: false })
+  const displayRedeemModal = () => {
+    setShowRedeemModal(true)
   }
 
-  displayTransferModal = () => {
-    this.setState({ showTransferModal: true })
+  const dismissTransferModal = () => {
+    setShowTransferModal(false)
   }
 
-  setCoupon2Redeem = (tokenId) => {
-    for (let c of this.state.myCoupons) {
+  const displayTransferModal = () => {
+    setShowTransferModal(true)
+  }
+
+  const setCoupon2Redeem = (tokenId) => {
+    for (let c of myCoupons) {
       if (c.tokenId === tokenId) {
         // prepare the modal message...
         let coupon2RedeemMessage = {}
@@ -224,119 +172,160 @@ class App extends React.Component {
         coupon2RedeemMessage.value = c.value
         coupon2RedeemMessage.expiryDate = c.expiryDate
         coupon2RedeemMessage.description = c.description
-        this.setState({ coupon2RedeemMessage: coupon2RedeemMessage })
-        this.displayRedeemModal()
+        setCoupon2RedeemMessage(coupon2RedeemMessage)
+        displayRedeemModal()
       }
     }
   }
 
-  setCoupon2Transfer = (tokenId) => {
-    let accounts = this.state.accounts.filter(account => account !== this.state.myAccount)
-    let transferAccounts = accounts.map(a => {
+  const setCoupon2Transfer = (tokenId) => {
+    let acc = accounts.filter(a => a !== myAccount)
+    let transferAccountsList = acc.map(a => {
       return <option key={a} value={a}>{a}</option>
     })
-    console.log(`transferAccount: ${transferAccounts}`)
-    this.setState({
-      transferAccounts: transferAccounts,
-      tokenId2Transfer: tokenId
-    }, () => {
-      this.displayTransferModal()
-    })
+    // console.log(`transferAccount: ${JSON.stringify(transferAccountsList)}`)
+    setTransferAccountList(transferAccountsList)
+    setTokenId2Transfer(tokenId)
+    displayTransferModal()
   }
 
-  setTransferAccount = (account) => {
-    this.setState({ transferAccount: account })
-  }
-
-  transfer = async () => {
-    this.dismissTransferModal()
-    if (this.state.tokenId2Transfer && this.state.transferAccount) {
-      await this.state.couponInstance.safeTransferFrom(
-        this.state.myAccount, this.state.transferAccount, this.state.tokenId2Transfer,
-        { from: this.state.myAccount }
+  const transfer = async () => {
+    dismissTransferModal()
+    if (tokenId2Transfer && transferAccount) {
+      await couponInstance.safeTransferFrom(
+        myAccount, transferAccount, tokenId2Transfer, { from: myAccount }
       )
-      this.updateMyCoupons().then(myCoupons => {
-        this.setState({ myCoupons: myCoupons })
-        this.setState({ nCoupons: this.nCoupons() })
-      })
-      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
-      alert(`Coupon [${this.state.tokenId2Transfer}] transferred to ${this.state.transferAccount}`)
-      this.setState({ transferAccount: undefined, tokenId2Transfer: undefined })
+      setRefreshEventHistory(refreshEventHistory ? false : true)
+      setRefreshMyCoupons(refreshMyCoupons ? false : true)
+      setTokenId2Transfer(undefined)
+      alert(`Coupon [${tokenId2Transfer}] transferred to ${transferAccount}`)
     }
   }
 
-  redeem = async () => {
-    this.dismissRedeemModal()
-    if (this.state.coupon2RedeemMessage) {
-      let tokenId = this.state.coupon2RedeemMessage.tokenId
-      let results = await this.state.couponInstance.redeem(tokenId, { from: this.state.myAccount })
-      this.updateMyCoupons().then(myCoupons => {
-        this.setState({ myCoupons: myCoupons })
-        this.setState({ nCoupons: this.nCoupons() })
-      })
-      this.updateEventHistory().then(eventHistory => this.setState({ eventHistory: eventHistory }))
-      this.setState({ coupon2RedeemMessage: undefined })
-
-      alert(`Succesfully Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
+  const redeem = async () => {
+    dismissRedeemModal()
+    if (coupon2RedeemMessage) {
+      let tokenId = coupon2RedeemMessage.tokenId
+      let results = await couponInstance.redeem(tokenId, { from: myAccount })
+      setRefreshEventHistory(refreshEventHistory ? false : true)
+      setRefreshMyCoupons(refreshMyCoupons ? false : true)
+      setCoupon2RedeemMessage(undefined)
+      alert(`Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
     }
   }
 
-  updateEventHistory = async () => {
-    // redeem events
-    let events = await this.state.couponInstance.getPastEvents('redeemCouponEvent', { fromBlock: 0, toBlock: 'latest' })
-    let filteredEvents = events.filter(e => e.returnValues.customer === this.state.myAccount)
-    let filteredRedeemEvents = filteredEvents.map(e => {
-      return ({
-        event: 'redeem',
-        tokenId: e.returnValues.tokenId,
-        blockTimeStamp: e.returnValues.blockTimeStamp,
-        transactionHash: e.transactionHash,
-        remarks: ""
-      })
-    })
-
-    // transfer events
-    events = await this.state.couponInstance.getPastEvents('Transfer', { fromBlock: 0, toBlock: 'latest' })
-    filteredEvents = events.filter(e => {
-      return (
-        (e.returnValues.from !== "0x0000000000000000000000000000000000000000") &&
-        ((e.returnValues.from === this.state.myAccount) ||
-          (e.returnValues.to === this.state.myAccount)
-        )
-      )
-    })
-    let filteredTransferEvents = []
-    for (let e of filteredEvents) {
-      let results = await this.state.web3.eth.getTransaction(e.transactionHash)
-      let blockNumber = results.blockNumber
-      results = await this.state.web3.eth.getBlock(blockNumber)
-      let timestamp = results.timestamp
-      let eventObject = {}
-      eventObject.event = 'transfer'
-      eventObject.tokenId = e.returnValues.tokenId
-      eventObject.remarks =
-        (e.returnValues.from === this.state.myAccount)
-          ?
-          `To: ${e.returnValues.to}`
-          :
-          `From: ${e.returnValues.from}`
-      eventObject.blockTimeStamp = timestamp
-      eventObject.transactionHash = e.transactionHash
-      filteredTransferEvents.push(eventObject)
-    }
-
-    console.log(`filteredTransferEvents: ${JSON.stringify(filteredTransferEvents)}`)
-
-    let history = [...filteredRedeemEvents, ...filteredTransferEvents]
-    return history
+  if (!web3) {
+    return <div>Loading Web3, accounts, and contract...</div>;
   }
-}  // end of App
 
+  return (
+    <Container>
+      <div className="d-flex flex-row justify-content-center">
+        <h1>Coupons</h1>
+      </div>
+
+      <div className="d-flex flex-row justify-content-center">
+        {
+          (network) ?
+            <Provider network={network} />
+            :
+            <div></div>
+        }
+      </div>
+
+      <div className="d-flex flex-row justify-content-center">
+        <ContractAddress contractInstance={couponInstance} />
+      </div>
+
+      <div className="d-flex flex-row justify-content-center mt-3">
+        <AccountSelector
+          accounts={accounts}
+          switchAccount={switchAccount}
+          currentAccount={myAccount}
+        />
+      </div>
+
+      <div className="d-flex flex-row justify-content-center" >
+        <p>You have: <span className="h3 text-success font-weight-bolder">{nCoupons}</span> unused coupon(s)</p>
+      </div>
+
+      <div className="d-flex flex-row justify-content-center" >
+        <Modal show={showRedeemModal} onHide={dismissRedeemModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Redeem this Coupon?</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body>
+            <p className="h6">No. <span className="font-weight-bolder">
+              {(typeof coupon2RedeemMessage === "undefined") ? "" : coupon2RedeemMessage.tokenId}</span>
+            </p>
+            <ul>
+              <li>{(typeof coupon2RedeemMessage === "undefined") ? "" : coupon2RedeemMessage.description}</li>
+              <li>Value: {(typeof coupon2RedeemMessage === "undefined") ? "" : coupon2RedeemMessage.value}</li>
+              <li>Expiry Date: {(typeof coupon2RedeemMessage === "undefined") ? "" : coupon2RedeemMessage.expiryDate}</li>
+            </ul>
+          </Modal.Body >
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={dismissRedeemModal}>Cancel</Button>
+            <Button variant="primary" onClick={redeem}>Redeem</Button>
+          </Modal.Footer>
+        </Modal >
+      </div>
+
+      <div className="d-flex flex-row justify-content-center" >
+        <Modal show={showTransferModal} onHide={dismissTransferModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Transfer this Coupon?</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body>
+            <Form.Control
+              as="select"
+              className="mr-sm-2"
+              id="account"
+              custom
+              onChange={(e) => e.target.value !== "0" && setTransferAccount(e.target.value)}
+            >
+              <option key="0" value="0">Choose...</option>
+              {transferAccountList}
+            </Form.Control>
+          </Modal.Body >
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={dismissTransferModal}>Cancel</Button>
+            <Button variant="primary" onClick={transfer}>Transfer</Button>
+          </Modal.Footer>
+        </Modal >
+      </div>
+
+      <div className="d-flex flex-row justify-content-center" >
+        <CouponSelector
+          myAccount={myAccount}
+          myCoupons={myCoupons}
+          setCoupon2Redeem={setCoupon2Redeem}
+          setCoupon2Transfer={setCoupon2Transfer}
+        />
+      </div>
+
+      <br></br>
+      <div className="d-flex flex-row justify-content-center align-items-stretch" >
+        {
+          (eventHistory) ?
+            <EventHistory events={eventHistory} />
+            :
+            <div></div>
+        }
+      </div>
+
+    </Container >
+  );
+}
 //
 // function components
 //
 const EventHistory = (props) => {
-  if (props.events === null || props.events === undefined || props.events.length === 0) {
+  if (props.events === null || props.events === undefined) {
     return < div ></div >
   }
   // let listItems = this.props.events.map((e) => <li key={e.transactionHash}>Value: {e.newValue} (was {e.oldValue})</li>)
@@ -378,7 +367,7 @@ const Provider = (props) => {
       <div></div>
       :
       <div className="d-flex justify-content-center">
-        <small>Connected to network: <code className="text-info">{props.networkType} (Id: {props.Id})</code></small>
+        <small>Connected to network: <code className="text-info">{props.network.networkType} (Id: {props.network.Id})</code></small>
       </div >
   )
 }
@@ -409,7 +398,7 @@ const CouponSelector = (props) => {
           <Card.Subtitle>
             {c.description}
           </Card.Subtitle>
-          <div class="d-flex">
+          <div className="d-flex">
             {
               c.redeemed ?
                 <Card.Text>
@@ -441,9 +430,9 @@ const CouponSelector = (props) => {
             }
           </div>
         </Card.Body>
-        <Card.Footer class="bg-transparent">
-          <div class="d-flex flex-row-reverse align-self-end mb-2 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"
+        <Card.Footer className="bg-transparent">
+          <div className="d-flex flex-row-reverse align-self-end mb-2 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-info-circle" viewBox="0 0 16 16"
               onClick={(e) => { alert(c.tokenURI) }}
               style={{ cursor: "pointer" }}>
               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
@@ -456,7 +445,7 @@ const CouponSelector = (props) => {
 
   )
   return (
-    <div class="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1">
+    <div className="d-flex row-cols-xl-4 row-cols-lg-3 row-cols-md-2 row row-cols-sm-1">
       {couponItems}
     </div>
   )
