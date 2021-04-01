@@ -342,8 +342,8 @@ const EventHistory = (props) => {
         (listItems.length > 0) ?
           <div>
             <div className="d-flex justify-content-center">Transaction History</div>
-            <div className="d-flex justify-content-center">
-              <Table striped bordered hover size="sm">
+            <div className="d-flex justify-content-center mt-1">
+              <Table striped bordered hover responsive size="sm">
                 <thead>
                   <tr>
                     <th className="col-auto">Event</th>
