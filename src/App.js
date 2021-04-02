@@ -1,6 +1,6 @@
 import React from 'react';
 // import ReactDOM from 'react-dom';
-import { Button, ButtonGroup, ButtonToolbar, Modal, Table, Card, Container, Col, Form } from 'react-bootstrap';
+import { Button, ButtonGroup, ButtonToolbar, Modal, Table, Card, Container, Col, Form, Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import getWeb3 from "./getWeb3";
 import CouponContract from "./build/contracts/Coupon.json";
@@ -22,6 +22,8 @@ const App = () => {
   const [network, setNetwork] = React.useState(null)
   const [refreshMyCoupons, setRefreshMyCoupons] = React.useState(false)
   const [refreshEventHistory, setRefreshEventHistory] = React.useState(false)
+  const [showAlert, setShowAlert] = React.useState(false)
+  const [alertMessage, setAlertMessage] = React.useState({ variant: "info", header: "", body: "" })
 
   React.useEffect(() => {
     getWeb3().then(results => {
@@ -161,6 +163,27 @@ const App = () => {
     setShowTransferModal(true)
   }
 
+  const displayAlert = (variant, header, body) => {
+    let message = {}
+    message.variant = variant
+    message.header = header
+    message.body = body
+    setAlertMessage(message)
+    setShowAlert(true)
+  }
+
+  const AlertMessage = (props) => {
+    let variant = props.message.variant ? props.message.variant : "info"
+    let header = props.message.header ? props.message.header : ""
+    let body = props.message.body ? props.message.body : ""
+    return (
+      <Alert show={showAlert} variant={variant} dismissible onClose={() => setShowAlert(false)}>
+        <Alert.Heading>{header}</Alert.Heading>
+        <p>{body}</p>
+      </Alert>
+    )
+  }
+
   const setCoupon2Redeem = (tokenId) => {
     for (let c of myCoupons) {
       if (c.tokenId === tokenId) {
@@ -190,25 +213,37 @@ const App = () => {
   const transfer = async () => {
     dismissTransferModal()
     if (tokenId2Transfer && transferAccount) {
-      await couponInstance.safeTransferFrom(
-        myAccount, transferAccount, tokenId2Transfer, { from: myAccount }
-      )
-      setRefreshEventHistory(!refreshEventHistory)
-      setRefreshMyCoupons(!refreshMyCoupons)
-      setTokenId2Transfer(undefined)
-      alert(`Coupon [${tokenId2Transfer}] transferred to ${transferAccount}`)
+      try {
+        let results = await couponInstance.safeTransferFrom(
+          myAccount, transferAccount, tokenId2Transfer, { from: myAccount }
+        )
+        console.log(`transfer() results = ${JSON.stringify(results)}`)
+        setRefreshEventHistory(!refreshEventHistory)
+        setRefreshMyCoupons(!refreshMyCoupons)
+        setTokenId2Transfer(undefined)
+        // alert(`Coupon [${tokenId2Transfer}] transferred to ${transferAccount}`)
+        displayAlert("info", "Transfer was successful", `Coupon [${tokenId2Transfer}] transferred to ${transferAccount}`)
+      } catch (error) {
+        displayAlert("danger", "Transfer failed", error.message)
+      }
     }
   }
 
   const redeem = async () => {
     dismissRedeemModal()
     if (coupon2RedeemMessage) {
-      let tokenId = coupon2RedeemMessage.tokenId
-      let results = await couponInstance.redeem(tokenId, { from: myAccount })
-      setRefreshEventHistory(!refreshEventHistory)
-      setRefreshMyCoupons(!refreshMyCoupons)
-      setCoupon2RedeemMessage(undefined)
-      alert(`Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
+      try {
+        let tokenId = coupon2RedeemMessage.tokenId
+        let results = await couponInstance.redeem(tokenId, { from: myAccount })
+        console.log(`redeem() results = ${JSON.stringify(results)}`)
+        setRefreshEventHistory(!refreshEventHistory)
+        setRefreshMyCoupons(!refreshMyCoupons)
+        setCoupon2RedeemMessage(undefined)
+        // alert(`Redeemed Coupon (${tokenId}) \rTransaction ref: \r${results.tx}`)
+        displayAlert("info", "Redeem was successful", `Redeemed coupon #${tokenId}`)
+      } catch (error) {
+        displayAlert("danger", "Redemm failed", error.message)
+      }
     }
   }
 
@@ -218,6 +253,7 @@ const App = () => {
 
   return (
     <Container>
+      <AlertMessage message={alertMessage} />
       <div className="d-flex flex-row justify-content-center">
         <h1>Coupons</h1>
       </div>
