@@ -1,7 +1,5 @@
-# A Proof-of-Concept Example of Implemening E-Coupons Using Non-Fungible Token (NFT)
-This is a proof-of-concept example of using NFT to implement a simple e-coupon app.  
-
-Each e-coupon, and more specifically its right-to-use, is modelled using a [RC721](https://docs.openzeppelin.com/contracts/3.x/erc721) token. The two key end user operations `redeem` and `transfer` are modeled as Ethereum transactions in the [Solidity contact](contacts/Coupon.sol).
+# A PoC Implementation of E-Coupons Using Non-Fungible Token (NFT)
+An e-coupon, and more specifically its entitlement, is modelled using a [RC721](https://docs.openzeppelin.com/contracts/3.x/erc721) token. Two key end user operations `redeem` and `transfer` are modeled as Ethereum transactions in the [Solidity contact](contacts/Coupon.sol).
 
 ## Running the app
 The app and a personal Ethereum blockchain have been [dockerized](docker-compose.yml).
