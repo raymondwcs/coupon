@@ -1,4 +1,6 @@
-const TOKEN_URI = "https://erc-721.s3.amazonaws.com/uri/coupon-50.json"
+// const TOKEN_URI = "https://erc-721.s3.amazonaws.com/uri/coupon-50.json"
+const TOKEN_URI = "https://gateway.pinata.cloud/ipfs/QmdZi6YhkLCQFwDyyE5BzTPD5SCB5H889uJ5Qsy4gcLiCE"
+
 module.exports = async function main(callback) {
     try {
         const accounts = await web3.eth.getAccounts()

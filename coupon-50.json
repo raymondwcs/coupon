@@ -1,0 +1,6 @@
+{
+	"description" : "Cash Coupon",
+	"value" : 50,
+	"currency" : "HKD",
+	"expiryDate" : "2050-12-31"
+}
